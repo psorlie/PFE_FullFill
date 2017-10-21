@@ -73,12 +73,12 @@ socket_close($sock);
         if ($handle) {
           $i = 0;
           while (($buffer = fgets($handle, 4096)) !== false) {
-            echo "<span class=\"dispenser\">";
+            echo "<button class=\"dispenser\">";
             $array_for_dispenser = explode("/", $buffer, 5);
-            $generated_string = "<span class=\"id_dispenser\"><p>" . $array_for_dispenser[0] . "</p></span>"; // ID
-            $generated_string .= "<span class=\"filling_dispenser\"><p>" . $array_for_dispenser[1] . "</p></span>"; // filling
-            $generated_string .= "<span class=\"battery_dispenser\"><p>" . $array_for_dispenser[2] . "</p></span>"; // battery
-            $generated_string .= "<span class=\"name_dispenser\"><p>" . $array_for_dispenser[3] . "</p></span></span>"; // name
+            $generated_string = " ID : <span class=\"id_dispenser\">" . $array_for_dispenser[0] . "</span><br/>"; // ID
+            $generated_string .= " Remplissage : <span class=\"filling_dispenser\">" . $array_for_dispenser[1] . "</span><br/>"; // filling
+            $generated_string .= "  Batterie : <span class=\"battery_dispenser\">" . $array_for_dispenser[2] . "</span><br/>"; // battery
+            $generated_string .= " Produit : <span class=\"name_dispenser\">" . $array_for_dispenser[3] . "</span></button>"; // name
             echo $generated_string;
 
             if($i%3 == 2){
