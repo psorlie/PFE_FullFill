@@ -73,12 +73,12 @@ socket_close($sock);
         if ($handle) {
           $i = 0;
           while (($buffer = fgets($handle, 4096)) !== false) {
-            echo "<p class=\"dispenser\">";
+            echo "<span class=\"dispenser\">";
             $array_for_dispenser = explode("/", $buffer, 5);
-            $generated_string = $array_for_dispenser[0] . "<br/>"; // ID
-            $generated_string .= $array_for_dispenser[1] . "<br/>"; // filling
-            $generated_string .= $array_for_dispenser[2] . "<br/>"; // battery
-            $generated_string .= $array_for_dispenser[3] . "</p>"; // name
+            $generated_string = "<span class=\"id_dispenser\"><p>" . $array_for_dispenser[0] . "</p></span>"; // ID
+            $generated_string .= "<span class=\"filling_dispenser\"><p>" . $array_for_dispenser[1] . "</p></span>"; // filling
+            $generated_string .= "<span class=\"battery_dispenser\"><p>" . $array_for_dispenser[2] . "</p></span>"; // battery
+            $generated_string .= "<span class=\"name_dispenser\"><p>" . $array_for_dispenser[3] . "</p></span></span>"; // name
             echo $generated_string;
 
             if($i%3 == 2){

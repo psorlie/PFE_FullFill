@@ -1,0 +1,31 @@
+#corps {
+	padding:5px 0px 5px 0px;
+	background:rgba(157, 183, 250, 0.2);
+	max-height:80%;
+	vertical-align:middle;
+	margin-left:10%;
+	margin-right:10%;
+	margin-top:2%;
+	margin-bottom:5%;
+	overflow:auto;
+	padding-left:15px;
+}
+.line {
+  display:inline;
+  width:99%;
+}
+.dispenser {
+  display:inline-block;
+  width:30%;
+  text-align: center;
+  border-radius:5px;
+	border-width:3px 3px 3px 3px;
+	border-style:dashed;
+	border-color:#010101;
+	padding:5px;
+  margin:2px;
+}
+
+p {
+  margin:0,3em;
+}
