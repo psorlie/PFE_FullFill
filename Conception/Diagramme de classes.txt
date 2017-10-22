@@ -1,1 +1,128 @@
-http://www.plantuml.com/plantuml/uml/ZLRBhjiW4Dtp5LuwpUKFgkgsogQBgb9RjKj4x8c3Wd44-4PHR_-zCmPi_4Xl5vPW7d3cp0C_Eo-jxrlDAYsTApv_AtwpFopkVe5gpZwNV9BUWxq7aJmwRsNbYw3x3iPr5bLxPNpHWdIzXN97bj7xwz61VG6ouTLPsdT5BRqKlXCEJCruVyKz25MNT8AgTsnlGTQanPFBU47OeOwS19rGJeUXM2ldmGXPNKntqr0t16Blphslkvj9X-sce7we5knFZAGZO1buWMi4BBLebM7yWE2Acxo0wA_2erCKEGsG11OS-65DL_1eJSl1Qa221biNXA0pGRJDRonAOgYWPTHEbyzqOt07vQuOCTWlqiWcS3_AaBEq54HRYFxOdqueM69al0ODc9_HXyAgD4Yp467IqCp0BPE7Z3uL8LL64aW-PB05vn1PJ6BSeN8pZyDzDlcaqYd7YAQ0a9y8H6ez0xXtyYMBGc0F-A56CbuQf3RuMN-VUySgNK9OmDyZ-QenLCmRu9wAiSBZSIUbjJBDO-DeC7aSGoy-zeW6amUnlcsUPoLPO_bGyRapzHXiKppra9N6QUd30F1n1qDxYfFjsjHt2vhMTKe5kk0MonA_I03ZCIx62I_MoGndc3wKFcG-zaXO9NbYEYgpRR98p4QBR9ii1YQZEgs7MK3A1N7HR2LTpvyZM7l7y5qbzNBupETEFd8sPWnELwWkekgCWSghRjwWOnJhUnBO3SqRawayF1nCCzN8KjLR2yQlsFXulMfLIK9DfKJ0jRolcpXMwRonAHtWRvqTWZ-ffhV3IQGCd3nKa-yq4rRgcxHcQneCScYl_v1FzOD1uWlBUHSVIvRUqqmK7zrC4jyzpby_Z4yeonujpYVn-CIYS3dwMTQaRwl78rSloFlNt7kjH-s4ZishU_FYFEN_eP-Vo9vnGk0Vp5y0
+http://www.plantuml.com/plantuml/uml/ZLPBRjim4Dth55hASNc3eaW2Pv55ai8ksW95GT3IM1P2KGP9nJ2Qthqp8YbHdoHT1A7Up91l_husLcZRrZB9fJ0clT-cVvA_YV_w0LLvj35oAwm5VN6Gs1khHMvJ9zk1Cer6qRfIDgr1c5P3jY9DR_sqDw1VW7HOUog41LuL6MbNnIfPQn05DzqjcR_CVQ4C3mL72v7bHw6lKZeYB2jZGN6HFwlcBA4ewS6rERQsQCugNBOQ7FXMrQ2_8-k6I4H4EPwHd92yhbJ2DaWkFOjduEs9MpJoa9400T1Wm7PdUe9vRJfsMXqJL5Xwm3aT0LutVZ7DA48f7RrqU7mawvtRLEQ47eD-44gKBiuzTlNhyUdXTdl77sv-yitzxklTu-vk-pijWWAdOBgOxDl30O4fyuGL806prjkGixa4eIOGfXBL59mZtENvK-eIg0HHPrrUQp06-VhK-YyKBcQtUqy76suRodAHzNuE3gtwAZjKKbQgx2dGVuyDIdjNsoCbZwtYEAAbAcT-OOgyrqBAKJJMHhn48UFOShOhq-ZA4hFhxBIzZAqzkwc_arW5DNVvWfyJVu8-fM4nCq412ulAqXof-w1tTcWeBPIHmhhEj_uBkbxb1ztKeGadXET5IzKwyHAh4V-y1mdpx1D65B4yHjJSsA50uapn3UDE0GzLu8NHPz089U0rei-WqSNBYyEv6mmadCJAgytG-J3QWzONTD_aGaudqNW8nVDdOU2m_0ZvCyyRfI2tLJFkozwB-Jk1x8BaWp6LRTwSKYDH7wMyrHgKdKNZvdIILIw8DPKI4PVYCcydNvZZ5gDqW3qtkdF-K9MjxcuYeOl9csAo7Rfp9ZuBhPRwiiEXFhs33_M3Jk9gPQpnMp89YpI2_BQD4By46Nlzqk_E9DfWZ0rmlriHdEw196hIZyNzbRDrylarjfxBKJgmIyRLlVXmdFB_a8zlJAvnGk1Fbty0
+
+@startuml
+class IR {
+}
+
+class Weight {
+}
+
+class Battery {
+}
+
+abstract class Sensor {
++int measure()
++init_sensor()
++shutdown_sensor()
+}
+
+
+class Observer {
+-update_id(int id)
+-int filling
+-int battery_level
+-send_data(int nb1, int nb2)
++read_sensor()
++shutdown_sensor()
++send_again()
+}
+
+class TimerVraco {
+-int measure_interval_min
+-Date wake_up_time
+-Date sleep_time
+-reset_timer()
+-wake_up()
++set_measure_interval_min(int interval_min)
++set_wake_up_time (date time)
++set_sleep_time (date time)
++start_timer_ack()
++stop_timer_ack()
++start_timer_sleep()
+}
+
+class DispenserManager {
+-Dispenser*[NOMBRE_MAX_DISPENSER] dispenser_list
+-int buffer_measure_interval
+-delete_dispenser()
+-clean_dispenser()
+-create_new_dispenser(int id, char* name)
+-send_message(char* message)
+-listen_acknowledge()
+-clear_message_to_send(Dispenser dispenser)
+-Dispenser* find_dispenser(int id)
++create_all_dispenser()
++save_dispenser_state()
++Dispenser* get_all_dirty_dispenser()
++update_message_to_send(char* message)
++update_state(int id, int filling, int battery)
++update_name(int id, char* name)
++update_last_wash_date(int id)
+}
+
+class Translator {
++translate_data_from_sensor(char* message)
+}
+
+class Dispenser {
+-message_to_send
+-id
+-filling
+-battery
+-name
+-last_wash_date
+-adress
+-time_last_communication_min
++int get_id()
++set_id()
++int get_filling()
++set_filling()
++int get_battery()
++set_battery()
++int get_name()
++set_name()
++Date get_last_wash_date()
++set_last_wash_date()
++Bool check_message()
++char* get_message_to_send()
+}
+
+class TimerVracberry{
+-scale_interval_min
+-wake_up_time
+-sleep_time
+-wake_up()
+-sleep()
+-check_connection_dispenser()
++int get_scale_interval_min()
++set_scale_interval_min(interval_min)
++set_wake_up_time(Date time)
++set_sleep_time(Date time)
++Date get_current_date()
+}
+
+class Application {
++display_all_dispenser()
++update_dispenser()
++set_network_configuration()
++check_network_configuration()
++set_dispenser_configuration()
++warn_dirty_dispenser()
++warn_empty_dispenser()
++warn_empty_battery()
+}
+
+IR --o Sensor
+Battery --o Sensor
+Weight --o Sensor
+Sensor --|> Observer
+TimerVraco -- Observer
+Observer -- DispenserManager
+Translator -- DispenserManager
+Translator -- Observer
+DispenserManager <|-- Dispenser
+DispenserManager -- TimerVraco
+TimerVracberry -- DispenserManager
+Application -- DispenserManager
+Application -- TimerVracberry
+@enduml

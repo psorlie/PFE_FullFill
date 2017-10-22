@@ -1,0 +1,46 @@
+http://www.plantuml.com/plantuml/uml/bLJBJiCm4BpdAtoaY1pWM042r2E80nLNQ-jiMgkE7TcR09_4T_1Zs6dpb5FAATPcPcSsEyw38x1K5Ifv52Hh86HhMQ1zjo1CqXzPUizUDmvjZNR9B4B67MfdxCMYPxQ0f3q4rbi3MpAf9Gt1XteKMY2uog977oei7QdNe2gC4jskeinywDxR2k64u1CGeVrwnXhL2Wa5ZUKxip5W4Yj6hGvCH1kDFAqjQAUWSUB7o7W61DxB2DFjnMF20Zc52WUnzqXjl932d9Ri-gPmx8vHwHZgsiZK_dmBB4aQFRlSHXIs8FLKTSPPdvmEy0-tISyAu9LqfLyKsXVGi0r-gjBh8FTCml561tgTXoa_cHRY8haCyxJb87EA5kOddakbfDuElq27E8U_EMJXRp6nGx7d1JhdNyRWjsawn9CDeJlTS-iD73joCk72P6Tq5Zkmb-p86wwY7pmgF4bNEyhnUSKWowm_Bw8jsqtEPygKeqZD0fkPcylDfVRVtbzFNZGv7zmP_8IYLCXCtWrwJfgTGYp7-Up-Xmz-QF-F_GK0
+
+@startuml
+Activate TimerVraco
+TimerVraco -> Observer: read_sensor()
+Activate Observer
+Observer -> Sensor: init_sensor()
+Activate Sensor
+Observer -> Sensor: measure()
+Sensor --> Observer: value
+Observer -> Sensor: shutdown_sensor()
+Deactivate Sensor
+Observer -> BatteryLevelDetector: measure()
+Activate BatteryLevelDetector
+BatteryLevelDetector --> Observer: value
+Deactivate BatteryLevelDetector
+
+Observer -> Translator: send_data()
+Observer -> TimerVraco: start_timer_ack()
+note left: 12ms = tps envoi-réception
+TimerVraco -> Observer: send_again()
+Observer -> Translator: send_data()
+Activate Translator
+Observer -> TimerVraco: start_timer_ack()
+
+Translator -> DispenserManager: update_state()
+Deactivate Translator
+Activate DispenserManager
+DispenserManager -> DispenserManager: find_dispenser()
+DispenserManager -> Dispenser: set_filling()
+Activate Dispenser
+DispenserManager -> Dispenser: set_battery()
+DispenserManager -> Dispenser: check_message()
+DispenserManager <-- Dispenser: true
+DispenserManager -> Dispenser: get_message_to_send()
+DispenserManager <-- Dispenser: char* message
+Deactivate Dispenser
+
+DispenserManager -> Observer: send_message(message, address)
+Deactivate DispenserManager
+Observer -> TimerVraco: stop_timer_ack()
+Observer -> TimerVraco: set_measure_interval_min()
+note left: example of message
+Observer -> TimerVraco: start_timer_sleep()
+Deactivate Observer
+@enduml
