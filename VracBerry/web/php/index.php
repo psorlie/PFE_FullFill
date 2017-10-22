@@ -73,12 +73,12 @@ socket_close($sock);
         if ($handle) {
           $i = 0;
           while (($buffer = fgets($handle, 4096)) !== false) {
-            echo "<button class=\"dispenser\">";
+            echo "<span class=\"space\"> </span><button id=\"button_". $i . "\" class=\"dispenser\">";
             $array_for_dispenser = explode("/", $buffer, 5);
             $generated_string = " ID : <span class=\"id_dispenser\">" . $array_for_dispenser[0] . "</span><br/>"; // ID
             $generated_string .= " Remplissage : <span class=\"filling_dispenser\">" . $array_for_dispenser[1] . "</span><br/>"; // filling
             $generated_string .= "  Batterie : <span class=\"battery_dispenser\">" . $array_for_dispenser[2] . "</span><br/>"; // battery
-            $generated_string .= " Produit : <span class=\"name_dispenser\">" . $array_for_dispenser[3] . "</span></button>"; // name
+            $generated_string .= " Produit : <span class=\"name_dispenser\">" . $array_for_dispenser[3] . "</span></button><span class=\"space\"> </span>"; // name
             echo $generated_string;
 
             if($i%3 == 2){
@@ -95,5 +95,10 @@ socket_close($sock);
        </div>
       </div>
     </div>
+    <div class="popup">
+        <p> </p>
+    </div>
+    <script src="../js/jquery-3.2.1.js"></script>
+     <script src="../js/index.js"></script>
   </body>
 </html>
