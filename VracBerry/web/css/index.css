@@ -5,6 +5,7 @@
 }
 
 #corps {
+  min-width:90%;
 	padding:5px;
 	max-height:80%;
 	vertical-align:middle;
@@ -38,7 +39,7 @@ br {
   border-radius:5px;
   border-width:3px 3px 3px 3px;
   border-style:dashed;
-  border-color:#212121;
+  border-color:#7F7F7F;
   background-color: white;
   position: relative;
   text-align: center;

@@ -99,6 +99,7 @@ socket_close($sock);
         <p> </p>
     </div>
     <script src="../js/jquery-3.2.1.js"></script>
+    <script src="../js/socket.io.js"></script>
      <script src="../js/index.js"></script>
   </body>
 </html>
