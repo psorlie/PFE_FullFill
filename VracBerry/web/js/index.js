@@ -1,26 +1,40 @@
-var there_is_an_issue = false;
-var what_are_the_issue = "";
+$(".dispenser").each(function(){
+  var there_is_an_issue = false;
+  var what_are_the_issue = "";
+  var filling = parseInt($(this).children('.filling_dispenser').text());
+  var battery = parseInt($(this).children('.battery_dispenser').text());
+  if(filling < 20 || battery < 20){
+    $(this).css('background-color','orange');
+    if (filling < 5) {
+      what_are_the_issue += "Dispenser "+ $(this).children('.id_dispenser').text() + " is nearly empty \n";
+      $(this).css('background-color','red');
+      there_is_an_issue = true;
 
-$(".dispenser").each(parse_button($(this)));
-
-if (there_is_an_issue){
-  window.alert(what_are_the_issue);
-}
+    } else if (battery < 2) {
+      what_are_the_issue += "Dispenser "+ $(this).children('.id_dispenser').text() + " battery is nearly empty\n";
+      $(this).css('background-color','red');
+      there_is_an_issue = true;
+    }
+  }
+  if (there_is_an_issue){
+    window.alert(what_are_the_issue);
+  }
+});
 
 var connection = new WebSocket('ws://192.168.50.1:9876');
 $(".dispenser").click(function() {
   console.log("bouton");
-  connection.onopen = function () {
+  connection.onopen(function () {
     var data_send = new Object();
     data_send.data.type = "ask_dispenser";
     data_send.data.id = "" + $(this).children(".id_dispenser").text();
     var string = JSON.stringify(data_send);
-    connection.send(string); // Send the message 'Ping' to the server
+    connection.send(string);
     console.log(string);
-  };
+  });
 });
 
-connection.onmessage(function(event) {
+connection.onmessage = function(event) {
   var id_receive = "";
   var filling_receive = "";
   var battery_receive = "";
@@ -58,7 +72,7 @@ connection.onmessage(function(event) {
     default:
     window.alert("c'est la merde, on recoit des types chelous");
   }
-});
+};
 
 function setDetailWindow(id, filling, battery, date){
   window.alert("Detail Window not in beta version");
@@ -72,23 +86,28 @@ function setUpdateButton(id_updated, new_filling, new_battery){
   var id_button = "#button_" + id_updated;
   $(id_button).children(".filling_dispenser").text(new_filling);
   $(id_button).children(".battery_dispenser").text(new_battery);
-  parse_button($(id_button));
+  parse_button(id_button);
 }
 
 function parse_button(current_button){
-  var filling = parseInt(current_button.children('.filling_dispenser').text());
-  var battery = parseInt(current_button.children('.battery_dispenser').text());
+  var there_is_an_issue = false;
+  var what_are_the_issue = "";
+  var filling = parseInt($(current_button).children('.filling_dispenser').text());
+  var battery = parseInt($(current_button).children('.battery_dispenser').text());
   if(filling < 20 || battery < 20){
-    current_button.css('background-color','orange');
+    $(current_button).css('background-color','orange');
     if (filling < 5) {
-      what_are_the_issue += "Dispenser "+ current_button.children('.id_dispenser').text() + " is nearly empty \n";
-      current_button.css('background-color','red');
+      what_are_the_issue += "Dispenser "+ $(current_button).children('.id_dispenser').text() + " is nearly empty \n";
+      $(current_button).css('background-color','red');
       there_is_an_issue = true;
 
     } else if (battery < 2) {
-      what_are_the_issue += "Dispenser "+current_button.children('.id_dispenser').text() + " battery is nearly empty\n";
-      current_button.css('background-color','red');
+      what_are_the_issue += "Dispenser "+ $(current_button).children('.id_dispenser').text() + " battery is nearly empty\n";
+      $(current_button).css('background-color','red');
       there_is_an_issue = true;
     }
+  }
+  if (there_is_an_issue){
+    window.alert(what_are_the_issue);
   }
 }
