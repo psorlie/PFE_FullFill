@@ -1,4 +1,4 @@
-#page {
+#data_window {
   position: absolute;
   z-index:0;
   width:100%;
@@ -35,7 +35,7 @@ br {
   margin:0,3em;
 }
 
-.popup {
+.detail_window {
   display:none;
   border-radius:5px;
   border-width:3px 3px 3px 3px;
@@ -45,5 +45,16 @@ br {
   position: relative;
   text-align: center;
   vertical-align:middle;
-  z-index:1;
+}
+
+.network_window {
+  display: none;
+  border-radius:5px;
+  border-width:3px 3px 3px 3px;
+  border-style:dashed;
+  border-color:#7F7F7F;
+  background-color: white;
+  position: relative;
+  text-align: center;
+  vertical-align:middle;
 }

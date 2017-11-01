@@ -4,56 +4,6 @@ error_reporting(E_ALL);
 set_time_limit(10);
 
 ob_implicit_flush();
-
-/*$address ="192.168.50.1";
-$port=10000;
-
-if (($sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP)) === false) {
-    echo "socket_create() a échoué : raison : " . socket_strerror(socket_last_error()) . "\n";
-}
-
-if (socket_bind($sock, $address, $port) === false) {
-    echo "socket_bind() a échoué : raison : " . socket_strerror(socket_last_error($sock)) . "\n";
-}
-
-if (socket_listen($sock, 5) === false) {
-    echo "socket_listen() a échoué : raison : " . socket_strerror(socket_last_error($sock)) . "\n";
-}
-
-do {
-    if (($msgsock = socket_accept($sock)) === false) {
-        echo "socket_accept() a échoué : raison : " . socket_strerror(socket_last_error($sock)) . "\n";
-        break;
-    }
-    ////// Send instructions.
-    $msg = "\Bienvenue sur le serveur de test PHP.\n" .
-        "Pour quitter, tapez 'quit'. Pour éteindre le serveur, tapez 'shutdown'.\n";
-    socket_write($msgsock, $msg, strlen($msg));
-
-    do {
-        if (false === ($buf = socket_read($msgsock, 2048, PHP_NORMAL_READ))) {
-            echo "socket_read() a échoué : raison : " . socket_strerror(socket_last_error($msgsock)) . "\n";
-            break 2;
-        }
-        if (!$buf = trim($buf)) {
-            continue;
-        }
-        if ($buf == 'quit') {
-            break;
-        }
-        if ($buf == 'shutdown') {
-            socket_close($msgsock);
-            break 2;
-        }
-        $talkback = "PHP: You said '$buf'.\n";
-        socket_write($msgsock, $talkback, strlen($talkback));
-        echo "$buf\n";
-    } while (true);
-    socket_close($msgsock);
-} while (true);
-
-socket_close($sock);
-*/
  ?>
 
 <!DOCTYPE html>
@@ -63,7 +13,7 @@ socket_close($sock);
   <link rel="stylesheet" href="../css/index.css" />
   </head>
   <body>
-    <div id="page">
+    <div id="data_window">
       <div id ="entete">
       </div>
       <div id="corps">
@@ -94,8 +44,16 @@ socket_close($sock);
          ?>
        </div>
       </div>
+      <div id="footer">
+        <span class="network">
+          <button id="network_request"> Open Network Configuration </button>
+        </span>
+      </div>
     </div>
-    <div class="popup">
+    <div id="detail_window">
+        <p> </p>
+    </div>
+    <div id="network_window">
         <p> </p>
     </div>
     <script src="../js/jquery-3.2.1.js"></script>
