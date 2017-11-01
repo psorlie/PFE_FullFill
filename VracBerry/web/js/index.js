@@ -19,28 +19,18 @@ $("#data_request_from_detail").click(function() {
 });
 
 connection.onmessage = function(event) {
-  var id_receive = "";
-  var filling_receive = "";
-  var battery_receive = "";
-  var last_wash_date = "";
-  var dirty_dispenser = "";
-  var sleep_time = "";
-  var wake_up_time = "";
-  var cycle_time = "";
-  var msg = JSON.parse(event.data);
+  on_receive(event.data);
+};
+
+
+function on_receive(data){
+  var msg = JSON.parse(data);
   switch (msg.type) {
     case "detail_answer":
-    id_receive += msg.id;
-    filling_receive += msg.filling;
-    battery_receive += msg.battery;
-    last_wash_date += msg.date;
-    setDetailWindow(id_receive, filling_receive, battery_receive, last_wash_date);
+    setDetailWindow(msg.id, msg.filling, msg.battery, msg.date);
     break;
     case "update":
-    id_receive += msg.id;
-    filling_receive += msg.filling;
-    battery_receive += msg.battery;
-    setUpdateButton(id_receive, filling_receive, battery_receive);
+    setUpdateButton(msg.id, msg.filling, msg.battery);
     break;
     case "dirty_alert":
     for (var count = 0 ; count < msg.dirty_dispenser.length ; count ++){
@@ -48,15 +38,12 @@ connection.onmessage = function(event) {
     }
     break;
     case "network_answer":
-    sleep_time += msg.sleep_time;
-    wake_up_time += msg.wake_up_time;
-    cycle_time += msg.cycle_time;
-    setNetworkWindow(sleep_time, wake_up_time, cycle_time);
+    setNetworkWindow(msg.sleep_time, msg.wake_up_time, msg.cycle_time);
     break;
     default:
     window.alert("c'est la merde, on recoit des types chelous");
   }
-};
+}
 
 function send_asking_socket (type, current_window, new_window){
   var data_send = new Object();
@@ -65,7 +52,7 @@ function send_asking_socket (type, current_window, new_window){
   if(arguments[3] !== undefined) {
     data_send.data.id = "" + arguments[3];
   }
-  
+
   var string = JSON.stringify(data_send);
   connection.send(string);
   $(current_window).css('display','none');
@@ -88,24 +75,21 @@ function setUpdateButton(id_updated, new_filling, new_battery){
 }
 
 function parse_button(current_button){
-  var there_is_an_issue = false;
-  var what_are_the_issue = "";
   var filling = parseInt($(current_button).children('.filling_dispenser').text());
   var battery = parseInt($(current_button).children('.battery_dispenser').text());
+
   if(filling < 20 || battery < 20){
     $(current_button).css('background-color','orange');
     if (filling < 5) {
-      what_are_the_issue += "Dispenser "+ $(current_button).children('.id_dispenser').text() + " is nearly empty \n";
       $(current_button).css('background-color','red');
-      there_is_an_issue = true;
-
-    } else if (battery < 2) {
-      what_are_the_issue += "Dispenser "+ $(current_button).children('.id_dispenser').text() + " battery is nearly empty\n";
+      issue_called("Dispenser "+ $(current_button).children('.id_dispenser').text() + " is nearly empty \n");
+    } else if (battery < 1) {
       $(current_button).css('background-color','red');
-      there_is_an_issue = true;
+      issue_called("Dispenser "+ $(current_button).children('.id_dispenser').text() + " battery is nearly empty\n");
     }
   }
-  if (there_is_an_issue){
-    window.alert(what_are_the_issue);
-  }
+}
+
+function issue_called(text_for_alert){
+  window.alert(text_for_alert);
 }
