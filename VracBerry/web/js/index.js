@@ -1,37 +1,21 @@
-$(".dispenser").each(function(){
-  var there_is_an_issue = false;
-  var what_are_the_issue = "";
-  var filling = parseInt($(this).children('.filling_dispenser').text());
-  var battery = parseInt($(this).children('.battery_dispenser').text());
-  if(filling < 20 || battery < 20){
-    $(this).css('background-color','orange');
-    if (filling < 5) {
-      what_are_the_issue += "Dispenser "+ $(this).children('.id_dispenser').text() + " is nearly empty \n";
-      $(this).css('background-color','red');
-      there_is_an_issue = true;
+var connection = new WebSocket('ws://192.168.50.1:9876');
 
-    } else if (battery < 2) {
-      what_are_the_issue += "Dispenser "+ $(this).children('.id_dispenser').text() + " battery is nearly empty\n";
-      $(this).css('background-color','red');
-      there_is_an_issue = true;
-    }
-  }
-  if (there_is_an_issue){
-    window.alert(what_are_the_issue);
-  }
+$(".dispenser").each(parse_button($(this)));
+
+$(".dispenser").click(function() {
+  connection.onopen(send_asking_socket("ask_dispenser", "#data_window", "#detail_window", "" + $(this).children(".id_dispenser").text()));
 });
 
-var connection = new WebSocket('ws://192.168.50.1:9876');
-$(".dispenser").click(function() {
-  console.log("bouton");
-  connection.onopen(function () {
-    var data_send = new Object();
-    data_send.data.type = "ask_dispenser";
-    data_send.data.id = "" + $(this).children(".id_dispenser").text();
-    var string = JSON.stringify(data_send);
-    connection.send(string);
-    console.log(string);
-  });
+$("#network_request").click(function() {
+  connection.onopen(send_asking_socket("ask_network", "#data_window", "#network_window"));
+});
+
+$("#data_request_from_network").click(function() {
+  connection.onopen(send_asking_socket("ask_full_update", "#network_window", "#data_window"));
+});
+
+$("#data_request_from_detail").click(function() {
+  connection.onopen(send_asking_socket("ask_full_update", "#detail_window", "#data_window"));
 });
 
 connection.onmessage = function(event) {
@@ -60,7 +44,7 @@ connection.onmessage = function(event) {
     break;
     case "dirty_alert":
     for (var count = 0 ; count < msg.dirty_dispenser.length ; count ++){
-      window.alert(msg.dirty_dispenser[count]);
+      window.alert("the dispenser number " + msg.dirty_dispenser[count] + " is dirty");
     }
     break;
     case "network_answer":
@@ -73,6 +57,20 @@ connection.onmessage = function(event) {
     window.alert("c'est la merde, on recoit des types chelous");
   }
 };
+
+function send_asking_socket (type, current_window, new_window){
+  var data_send = new Object();
+  data_send.data.type = type;
+
+  if(arguments[3] !== undefined) {
+    data_send.data.id = "" + arguments[3];
+  }
+  
+  var string = JSON.stringify(data_send);
+  connection.send(string);
+  $(current_window).css('display','none');
+  $(new_window).css('display','block');
+}
 
 function setDetailWindow(id, filling, battery, date){
   window.alert("Detail Window not in beta version");
