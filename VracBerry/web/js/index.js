@@ -1,26 +1,5 @@
 var connection = new WebSocket('ws://192.168.50.1:9876');
 
-$(".dispenser").each(parse_button($(this)));
-
-$(".dispenser").click(function() {
-  connection.onopen(send_asking_socket("ask_dispenser", "#data_window", "#detail_window", "" + $(this).children(".id_dispenser").text()));
-});
-
-$("#network_request").click(function() {
-  connection.onopen(send_asking_socket("ask_network", "#data_window", "#network_window"));
-});
-
-$("#data_request_from_network").click(function() {
-  connection.onopen(send_asking_socket("ask_full_update", "#network_window", "#data_window"));
-});
-
-$("#data_request_from_detail").click(function() {
-  connection.onopen(send_asking_socket("ask_full_update", "#detail_window", "#data_window"));
-});
-
-connection.onmessage = function(event) {
-  on_receive(event.data);
-};
 
 
 function on_receive(data){
@@ -93,3 +72,26 @@ function parse_button(current_button){
 function issue_called(text_for_alert){
   window.alert(text_for_alert);
 }
+
+
+$(".dispenser").each(parse_button($(this)));
+
+$(".dispenser").click(function() {
+  connection.onopen(send_asking_socket("ask_dispenser", "#data_window", "#detail_window", "" + $(this).children(".id_dispenser").text()));
+});
+
+$("#network_request").click(function() {
+  connection.onopen(send_asking_socket("ask_network", "#data_window", "#network_window"));
+});
+
+$("#data_request_from_network").click(function() {
+  connection.onopen(send_asking_socket("ask_full_update", "#network_window", "#data_window"));
+});
+
+$("#data_request_from_detail").click(function() {
+  connection.onopen(send_asking_socket("ask_full_update", "#detail_window", "#data_window"));
+});
+
+connection.onmessage = function(event) {
+  on_receive(event.data);
+};
