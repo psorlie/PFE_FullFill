@@ -1,4 +1,4 @@
-var connection = new WebSocket('ws://192.168.50.1:9876');
+var connection = new WebSocket('ws://192.168.50.1:80');
 
 
 
@@ -26,16 +26,19 @@ function on_receive(data){
 
 function send_asking_socket (type, current_window, new_window){
   var data_send = new Object();
-  data_send.data.type = type;
+  var data_in_data = {};
+  data_in_data.type = type;
 
   if(arguments[3] !== undefined) {
-    data_send.data.id = "" + arguments[3];
+    data_in_data.id = "" + arguments[3];
   }
-
+  data_send.data = data_in_data;
   var string = JSON.stringify(data_send);
+  console.log("before really sending");
   connection.send(string);
-  $(current_window).css('display','none');
-  $(new_window).css('display','block');
+  console.log("before changing window");
+  $("#" + current_window).css('display','none');
+  $("#" + new_window).css('display','block');
 }
 
 function setDetailWindow(id, filling, battery, date){
@@ -79,22 +82,34 @@ function issue_called(text_for_alert){
 }
 
 
-$(".dispenser").each(parse_button($(this)));
+$(".dispenser").each(function(){
+  var $this = $(this);
+  parse_button($this);
+});
 
 $(".dispenser").click(function() {
-  connection.onopen(send_asking_socket("ask_dispenser", "#data_window", "#detail_window", "" + $(this).children(".id_dispenser").text()));
+  connection.onopen = function(event) {
+    send_asking_socket("ask_dispenser", "data_window", "detail_window", "" + $(this).children(".id_dispenser").text());
+  }
 });
 
 $("#network_request").click(function() {
-  connection.onopen(send_asking_socket("ask_network", "#data_window", "#network_window"));
+  connection.onopen = function(event) {
+    send_asking_socket("ask_network", "data_window", "network_window");
+  }
 });
 
 $("#data_request_from_network").click(function() {
-  connection.onopen(send_asking_socket("ask_full_update", "#network_window", "#data_window"));
+  connection.onopen = function(event) {
+    send_asking_socket("ask_full_update", "network_window", "data_window");
+  }
 });
 
+
 $("#data_request_from_detail").click(function() {
-  connection.onopen(send_asking_socket("ask_full_update", "#detail_window", "#data_window"));
+  connection.onopen = function(event) {
+    send_asking_socket("ask_full_update", "detail_window", "data_window");
+  }
 });
 
 $("#send_new_configuration").click(function() {
