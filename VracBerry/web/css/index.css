@@ -58,3 +58,12 @@ br {
   text-align: center;
   vertical-align:middle;
 }
+
+.current_data {
+    margin:10px;
+    width:100px;
+    background:#FF0000;
+    height:100px;
+    text-align:center;
+    vertical-align: middle;
+}

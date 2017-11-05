@@ -17,7 +17,7 @@ function on_receive(data){
     }
     break;
     case "network_answer":
-    setNetworkWindow(msg.sleep_time, msg.wake_up_time, msg.cycle_time);
+    setNetworkWindow(msg.sleep_time, msg.wake_up_time, msg.cycle_time, msg.day_between_cleaning);
     break;
     default:
     window.alert("c'est la merde, on recoit des types chelous");
@@ -39,11 +39,16 @@ function send_asking_socket (type, current_window, new_window){
 }
 
 function setDetailWindow(id, filling, battery, date){
-  window.alert("Detail Window not in beta version");
+  $("#filling_data").text(filling);
+  $("#battery_data").text(battery);
+  $("#last_washing_date_data").text(date);
 }
 
-function setNetworkWindow(sleep, wake_up, cycle){
-  window.alert("Network Window not in beta version");
+function setNetworkWindow(sleep, wake_up, cycle, day_between_cleaning){
+  $("#sleeping_hour_data").val(sleep);
+  $("#waking_hour_data").val(wake_up);
+  $("#in_between_message_time_data").val(cycle);
+  $("#cleaning_frequency_data").val(day_between_cleaning);
 }
 
 function setUpdateButton(id_updated, new_filling, new_battery){
@@ -92,6 +97,12 @@ $("#data_request_from_detail").click(function() {
   connection.onopen(send_asking_socket("ask_full_update", "#detail_window", "#data_window"));
 });
 
+$("#send_new_configuration").click(function() {
+  issue_called("not in beta version");
+});
+$("#send_cleaning_update").click(function() {
+  issue_called("not in beta version");
+});
 connection.onmessage = function(event) {
   on_receive(event.data);
 };
