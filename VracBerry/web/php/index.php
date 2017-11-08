@@ -51,13 +51,40 @@ ob_implicit_flush();
       </div>
     </div>
     <div id="detail_window">
-        <p> </p>
+      <form action="index.php" method="post">
+        <p> Produit <span id="name_product"></span></p>
+        <p> Nouveau nom du produit <input type="text" name="name" /> </p>
+      </form>
+      <table>
+        <tr>
+          <td><div class="current_data" id="filling_data">NULL</div></td>
+          <td><div class="current_data" id="battery_data">NULL</div></td>
+        </tr>
+        <tr>
+          <td>Remplissage</td><td>Batterie</td>
+        </tr>
+      </table>
+        <p> Dernier nettoyage le : <span id="last_washing_date_data"></span></p>
+        <button id="data_request_from_detail"> Close </button>
+        <button id="send_cleaning_update"> Nettoyage à ce jour </button>
     </div>
     <div id="network_window">
-        <p> </p>
+        <h3> Configuration du réseau </h3>
+        <form>
+          <p> Heure de mise en veille : </p>
+          <input type="text" id="sleeping_hour_data" value="0"/>
+          <p> Heure de redémarrage : </p>
+          <input type="text" id="waking_hour_data" value="0"/>
+          <p> Temps inter-émission : </p>
+          <input type="text" id="in_between_message_time_data" value="0"/>
+          <p> Fréquence de nettoyage des distributeurs : </p>
+          <input type="text" id="cleaning_frequency_data" value="0"/>
+
+        </form>
+        <button id="data_request_from_network"> Close </button>
+        <button id="send_new_configuration"> Confirme </button>
     </div>
     <script src="../js/jquery-3.2.1.js"></script>
-    <script src="../js/socket.io.js"></script>
      <script src="../js/index.js"></script>
   </body>
 </html>

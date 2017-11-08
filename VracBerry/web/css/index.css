@@ -35,7 +35,7 @@ br {
   margin:0,3em;
 }
 
-.detail_window {
+#detail_window {
   display:none;
   border-radius:5px;
   border-width:3px 3px 3px 3px;
@@ -47,7 +47,7 @@ br {
   vertical-align:middle;
 }
 
-.network_window {
+#network_window {
   display: none;
   border-radius:5px;
   border-width:3px 3px 3px 3px;
@@ -57,4 +57,13 @@ br {
   position: relative;
   text-align: center;
   vertical-align:middle;
+}
+
+.current_data {
+    margin:10px;
+    width:100px;
+    background:#FF0000;
+    height:100px;
+    text-align:center;
+    vertical-align: middle;
 }
