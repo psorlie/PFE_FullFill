@@ -10,8 +10,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "Dispenser.h"
 
 int main(void) {
-	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	printf("!!!Hello World!!!"); /* prints !!!Hello World!!! */
+	Dispenser * future_dispenser;
+	future_dispenser = Dispenser_create(future_dispenser, 1, "cacao", 2, 3);
 	return EXIT_SUCCESS;
 }
