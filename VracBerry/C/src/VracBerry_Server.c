@@ -14,7 +14,9 @@
 
 int main(void) {
 	printf("!!!Hello World!!!"); /* prints !!!Hello World!!! */
-	Dispenser * future_dispenser;
-	future_dispenser = Dispenser_create(future_dispenser, 1, "cacao", 2, 3);
+	Dispenser* future_dispenser;
+	future_dispenser = Dispenser_create(1, "cacao", 2, 3);
+	int sortie = Dispenser_get_battery(future_dispenser);
+	printf("coucou %d", sortie);
 	return EXIT_SUCCESS;
 }

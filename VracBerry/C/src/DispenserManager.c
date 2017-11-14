@@ -5,7 +5,11 @@
  *      Author: sorlie
  */
 
+#include <assert.h>
+#include <stdlib.h>
+
 #include "Dispenser.h"
+#include "DispenserManager.h"
 
 struct Dispenser_list_t {
 	Dispenser* first_dispenser;
@@ -13,7 +17,10 @@ struct Dispenser_list_t {
 
 static Dispenser_list* dispenser_list;
 
-Dispenser_list* DispenserManager_initialisation(){
+static Dispenser* DispenserManager_find_before_dispenser(Dispenser_Id);
+static Dispenser_list* DispenserManager_initialisation();
+
+static Dispenser_list* DispenserManager_initialisation() {
 	assert(dispenser_list == NULL);
 
 	Dispenser_list* list = malloc(sizeof(Dispenser_list));
@@ -23,7 +30,7 @@ Dispenser_list* DispenserManager_initialisation(){
 	return list;
 }
 
-DispenserManager_add_dispenser(Dispenser_Id id, Product product, Battery battery, Filling filling) {
+void DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {
 		dispenser_list = DispenserManager_initialisation();
 	}
@@ -41,7 +48,7 @@ void DispenserManager_free_dispenser(Dispenser_Id id) {
 	Dispenser_free(future_deleted_dispenser);
 }
 
-Dispenser* DispenserManager_find_before_dispenser(Dispenser_Id id) {
+static Dispenser* DispenserManager_find_before_dispenser(Dispenser_Id id) {
 	assert(dispenser_list != NULL);
 	int has_been_found = 0;
 
@@ -57,7 +64,19 @@ Dispenser* DispenserManager_find_before_dispenser(Dispenser_Id id) {
 				current_dispenser = current_dispenser->next_dispenser;
 			}
 		}
-
 	return current_dispenser;
+}
 
+Dispenser* DispenserManager_find_dispenser(Dispenser_Id id) {
+	assert(dispenser_list != NULL);
+	int has_been_found = 0;
+	Dispenser* current_dispenser = dispenser_list->first_dispenser;
+		while (current_dispenser->next_dispenser != NULL && !has_been_found) {
+			if(current_dispenser->id == id){
+				has_been_found = 1;
+			} else {
+				current_dispenser = current_dispenser->next_dispenser;
+			}
+		}
+		return current_dispenser;
 }

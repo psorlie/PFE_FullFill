@@ -5,41 +5,45 @@
  *      Author: sorlie
  */
 
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "Dispenser.h"
 
-struct Dispenser_t {
-	Message_to_send message;
-	Dispenser_Id id;
-	Filling filling;
-	Battery battery;
-	Product product;
-	Date * last_wash_date;
-	Dispenser* next_dispenser;
-};
-
-Dispenser* Dispenser_create(Dispenser_Id id, Product product, Battery battery, Filling filling) {
-	Dispenser* this;
+Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Filling filling) {
+	Dispenser * this;
+	printf("bordel");
 	this = (Dispenser *) malloc (sizeof(Dispenser));
+	printf("oui");
 
 	Dispenser_set_id(this, id);
 	Dispenser_set_filling(this, filling);
 	Dispenser_set_battery(this, battery);
-	Dispenser_set_product(this, product);
-	Dispenser_set_current_date(this);
+	//Dispenser_set_product(this, product);
+	//Dispenser_set_current_date(this);
 	this->next_dispenser = NULL;
+	printf("Ph il est bo");
 	return this;
+}
+
+void Dispenser_free(Dispenser* this){
+	if(this->last_wash_date != NULL){
+		free(this->last_wash_date);
+	}
+	free(this);
 }
 /* Getter */
 
-Product Dispenser_get_product(Dispenser* this) {
+Product* Dispenser_get_product(Dispenser* this) {
 	assert(this != NULL);
-
-	return this->product;
+	Product* product = this->product;
+	return product;
 }
 
 Battery Dispenser_get_battery(Dispenser* this) {
+	printf("\n coucou moi je %d lolilol", (int)this);
 	assert(this != NULL);
-
 	return this->battery;
 }
 
@@ -55,7 +59,7 @@ Filling Dispenser_get_filling(Dispenser* this) {
 	return this->filling;
 }
 
-Message_to_send Dispenser_get_message(Dispenser* this) {
+MessageToSend* Dispenser_get_message(Dispenser* this) {
 	assert(this != NULL);
 
 	return this->message;
@@ -69,16 +73,17 @@ Date* Dispenser_get_last_wash_date(Dispenser* this) {
 
 /* Setter */
 
-void Dispenser_set_product(Dispenser* this, Product product) {
+void Dispenser_set_product(Dispenser* this, char* product) {
 	assert(this != NULL);
-
-	this->product = product;
+	Product_setProduct(this->product, product);
 }
 
 void Dispenser_set_battery(Dispenser* this, Battery battery) {
+	printf("hello");
 	assert(this != NULL);
 
 	this->battery = battery;
+	printf("fin de set batterie");
 }
 
 void Dispenser_set_id(Dispenser* this, Dispenser_Id id) {
@@ -93,7 +98,7 @@ void Dispenser_set_filling(Dispenser* this, Filling filling) {
 	this->filling = filling;
 }
 
-void Dispenser_set_message(Dispenser* this, Message_to_send message) {
+void Dispenser_set_message(Dispenser* this, MessageToSend* message) {
 	assert(this != NULL);
 
 	this->message = message;
