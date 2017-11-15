@@ -61,4 +61,12 @@ extern void Dispenser_set_current_date(Dispenser*);
 
 extern void Dispenser_free(Dispenser*);
 
+extern int Dispenser_get_day(Dispenser*);
+
+extern int Dispenser_get_year(Dispenser*);
+
+extern char* Dispenser_get_product_name(Dispenser*);
+
+extern uint8_t Dispenser_get_product_size(Dispenser*);
+
 #endif /* SRC_DISPENSER_H_ */

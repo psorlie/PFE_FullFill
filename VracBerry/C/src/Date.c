@@ -7,14 +7,17 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 
 #include "Date.h"
 
+bool Date_free(Date* this) {
+	free(this);
+	return (this == NULL);
+}
 
-bool Date_set_current_date(Date* this) {
-	if(this != NULL){
-		free(this);
-	}
+Date* Date_set_current_date() {
+	Date* this;
 	time_t rawtime;
 	struct tm * timeinfo;
 	time(&rawtime);
@@ -24,11 +27,19 @@ bool Date_set_current_date(Date* this) {
 
 	this->year = (1900 + timeinfo->tm_year);
 	this->current_day = timeinfo->tm_yday;
-
-	return (this == NULL);
+	return this;
 }
 
-bool Date_free(Date* this) {
-	free(this);
-	return (this == NULL);
+int Date_get_year(Date* this) {
+	assert(this != NULL);
+	int ret = this->year;
+	assert(ret > 1900);
+	return ret;
+}
+
+int Date_get_day(Date* this) {
+	assert(this != NULL);
+	int ret = this->current_day;
+	assert(ret >= 0 && ret <= 366);
+	return ret;
 }

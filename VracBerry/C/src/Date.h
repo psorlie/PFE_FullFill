@@ -15,8 +15,12 @@ typedef struct {
 	int current_day;
 }Date;
 
-extern bool Date_set_current_date(Date*);
+extern Date* Date_set_current_date();
 
 extern bool Date_free(Date*);
+
+extern int Date_get_year(Date*);
+
+extern int Date_get_day(Date*);
 
 #endif /* SRC_DATE_H_ */

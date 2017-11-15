@@ -13,36 +13,44 @@
 
 Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	Dispenser * this;
-	printf("bordel");
 	this = (Dispenser *) malloc (sizeof(Dispenser));
-	printf("oui");
 
 	Dispenser_set_id(this, id);
 	Dispenser_set_filling(this, filling);
 	Dispenser_set_battery(this, battery);
-	//Dispenser_set_product(this, product);
-	//Dispenser_set_current_date(this);
+	printf("\n before set product");
+	Dispenser_set_product(this, product);
+	Dispenser_set_current_date(this);
 	this->next_dispenser = NULL;
-	printf("Ph il est bo");
 	return this;
 }
 
 void Dispenser_free(Dispenser* this){
 	if(this->last_wash_date != NULL){
-		free(this->last_wash_date);
+		Date_free(this->last_wash_date);
 	}
 	free(this);
 }
 /* Getter */
 
-Product* Dispenser_get_product(Dispenser* this) {
+char* Dispenser_get_product_name(Dispenser* this) {
 	assert(this != NULL);
-	Product* product = this->product;
-	return product;
+	char* ptr_to_name = Product_get_name(this->product);
+	return ptr_to_name;
+}
+
+uint8_t Dispenser_get_product_size(Dispenser* this) {
+	assert(this != NULL);
+	uint8_t size = Product_get_size(this->product);
+	return size;
+}
+
+Product* Dispenser_get_produit(Dispenser* this) {
+	assert(this != NULL);
+	return this->product;
 }
 
 Battery Dispenser_get_battery(Dispenser* this) {
-	printf("\n coucou moi je %d lolilol", (int)this);
 	assert(this != NULL);
 	return this->battery;
 }
@@ -71,19 +79,34 @@ Date* Dispenser_get_last_wash_date(Dispenser* this) {
 	return this->last_wash_date;
 }
 
+int Dispenser_get_year(Dispenser* this) {
+	assert(this != NULL);
+	int ret = Date_get_year(this->last_wash_date);
+	assert(ret > 1900);
+	return ret;
+}
+
+int Dispenser_get_day(Dispenser* this) {
+	assert(this != NULL);
+	int ret = Date_get_day(this->last_wash_date);
+	assert(ret >= 0 && ret <= 366);
+	return ret;
+}
+
 /* Setter */
 
 void Dispenser_set_product(Dispenser* this, char* product) {
 	assert(this != NULL);
-	Product_setProduct(this->product, product);
+	if(this->product != NULL) {
+		Product_destroy(this->product);
+	}
+	this->product = Product_set_product(product);
 }
 
 void Dispenser_set_battery(Dispenser* this, Battery battery) {
-	printf("hello");
 	assert(this != NULL);
 
 	this->battery = battery;
-	printf("fin de set batterie");
 }
 
 void Dispenser_set_id(Dispenser* this, Dispenser_Id id) {
@@ -110,7 +133,7 @@ void Dispenser_set_current_date(Dispenser* this) {
 	if(this->last_wash_date != NULL) {
 		Date_free(this->last_wash_date);
 	}
-	Date_set_current_date(this->last_wash_date);
+	this->last_wash_date = Date_set_current_date();
 }
 
 bool Dispenser_is_last_dispenser(Dispenser* this) {

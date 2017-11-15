@@ -7,25 +7,32 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+#include <stdio.h>
 
 #include "Product.h"
 
 static void Product_free(Product*);
 
+static uint8_t Product_set_size(char*);
 
-bool Product_setProduct(Product* this, char* new_product){
-	if (this != NULL){
-		Product_free(this);
-	}
+static uint8_t Product_set_size(char* new_product) {
+	uint8_t ret = strlen(new_product);
+	return ret;
+}
+
+
+Product* Product_set_product(char* new_product){
+	Product* this;
 	this = (Product *)malloc(sizeof(Product));
-	strcpy(this->product , new_product);
-	bool result;
-	if (strcmp(this->product, new_product)) {
-		result = true;
-	} else {
-		result = false;
+	this->size = Product_set_size(new_product);
+	this->name = (char*)malloc(sizeof(this->size));
+	if(this->name == NULL){
+		printf("mauvais");
 	}
-	return result;
+	memset(this->name, '\0', this->size);
+	strcpy(this->name, new_product);
+	return this;
 }
 
 void Product_destroy(Product* this) {
@@ -34,4 +41,14 @@ void Product_destroy(Product* this) {
 
 static void Product_free(Product* this) {
 	free(this);
+}
+
+char* Product_get_name(Product* this) {
+	assert(this != NULL);
+	return this->name;
+}
+
+uint8_t Product_get_size(Product* this) {
+	assert(this != NULL);
+	return this->size;
 }
