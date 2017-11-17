@@ -69,4 +69,6 @@ extern char* Dispenser_get_product_name(Dispenser*);
 
 extern uint8_t Dispenser_get_product_size(Dispenser*);
 
+extern MessageToSend* Dispenser_get_message(Dispenser*);
+
 #endif /* SRC_DISPENSER_H_ */

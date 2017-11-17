@@ -1,8 +1,14 @@
-/*
- * Product.c
+/**
+ * @file Product.c
  *
- *  Created on: 14 nov. 2017
- *      Author: sorlie
+ * @brief This module contain creation/destruction of a product and also getter/setter
+ *
+ *
+ *
+ * @version 1.0
+ * @date 16/11/2017
+ * @author Pierre-François SORLIE
+ * @copyright BSD 2-clauses
  */
 
 #include <stdlib.h>
@@ -12,35 +18,80 @@
 
 #include "Product.h"
 
+/*************************************************
+ ********** Static function declaration **********
+ *************************************************/
+
+/**
+ * @brief static function to free the product
+ *
+ * @pre the product exist
+ *
+ * @param[in] Product* product pointer that will be deleted
+ *
+ * @retval void
+ */
 static void Product_free(Product*);
 
+/**
+ * @brief static function to set the size in function of the character in it
+ * if it's bigger than PRODUCT_SIZE : it will be set as PRODUCT_SIZE and the character after won't be written
+ *
+ * @there is at least a char in the name
+ *
+ * @param[in] char* of the new product name
+ *
+ * @retval uint8_t : size of the name
+ */
 static uint8_t Product_set_size(char*);
+
+static Product* Product_set_name(Product*, char*);
+
+/*************************************************
+ ********* Static function initialization ********
+ *************************************************/
 
 static uint8_t Product_set_size(char* new_product) {
 	uint8_t ret = strlen(new_product);
-	return ret;
-}
-
-
-Product* Product_set_product(char* new_product){
-	Product* this;
-	this = (Product *)malloc(sizeof(Product));
-	this->size = Product_set_size(new_product);
-	this->name = (char*)malloc(sizeof(this->size));
-	if(this->name == NULL){
-		printf("mauvais");
+	if(ret > PRODUCT_SIZE){
+		return PRODUCT_SIZE;
+	} else {
+		return ret;
 	}
-	memset(this->name, '\0', this->size);
-	strcpy(this->name, new_product);
-	return this;
-}
-
-void Product_destroy(Product* this) {
-	Product_free(this);
 }
 
 static void Product_free(Product* this) {
+	free(this->name);
 	free(this);
+	printf("\n toujours vivant apres le produit");
+}
+
+static Product* Product_set_name(Product* this, char* product) {
+	Product* return_value = NULL;
+	if(!product == NULL){
+		memset(this->name, '\0', (this->size + 1));
+		strncpy(this->name, product, this->size);
+		return_value = this;
+	}
+	return return_value;
+}
+
+/*************************************************
+ ********* public function initialization ********
+ *************************************************/
+
+Product* Product_set_product(char* new_product){
+	assert(new_product != NULL);
+	Product* this;
+	this = (Product *)malloc(sizeof(Product));
+	this->size = Product_set_size(new_product);
+	this->name = (char*)malloc(sizeof(this->size + 1));
+	this = Product_set_name(this, new_product);
+}
+
+
+void Product_destroy(Product* this) {
+	Product_free(this);
 }
 
 char* Product_get_name(Product* this) {

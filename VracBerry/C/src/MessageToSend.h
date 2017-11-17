@@ -16,4 +16,6 @@ typedef struct {
 	char* message;
 }MessageToSend;
 
+extern bool MessageToSend_exist(MessageToSend*);
+
 #endif /* SRC_MESSAGETOSEND_H_ */

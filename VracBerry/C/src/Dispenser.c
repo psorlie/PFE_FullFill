@@ -18,7 +18,6 @@ Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Fil
 	Dispenser_set_id(this, id);
 	Dispenser_set_filling(this, filling);
 	Dispenser_set_battery(this, battery);
-	printf("\n before set product");
 	Dispenser_set_product(this, product);
 	Dispenser_set_current_date(this);
 	this->next_dispenser = NULL;
@@ -29,6 +28,10 @@ void Dispenser_free(Dispenser* this){
 	if(this->last_wash_date != NULL){
 		Date_free(this->last_wash_date);
 	}
+	if(this->product != NULL){
+		Product_destroy(this->product);
+	}
+	this->next_dispenser= NULL;
 	free(this);
 }
 /* Getter */
@@ -70,6 +73,10 @@ Filling Dispenser_get_filling(Dispenser* this) {
 MessageToSend* Dispenser_get_message(Dispenser* this) {
 	assert(this != NULL);
 
+	bool existing_message = MessageToSend_exist(this->message);
+	if(!existing_message) {
+		return NULL;
+	}
 	return this->message;
 }
 
