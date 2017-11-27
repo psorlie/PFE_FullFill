@@ -1,10 +1,14 @@
-http://www.plantuml.com/plantuml/uml/bLJBJiCm4BpdAtoaY1pWM042r2E80nLNQ-jiMgkE7TcR09_4T_1Zs6dpb5FAATPcPcSsEyw38x1K5Ifv52Hh86HhMQ1zjo1CqXzPUizUDmvjZNR9B4B67MfdxCMYPxQ0f3q4rbi3MpAf9Gt1XteKMY2uog977oei7QdNe2gC4jskeinywDxR2k64u1CGeVrwnXhL2Wa5ZUKxip5W4Yj6hGvCH1kDFAqjQAUWSUB7o7W61DxB2DFjnMF20Zc52WUnzqXjl932d9Ri-gPmx8vHwHZgsiZK_dmBB4aQFRlSHXIs8FLKTSPPdvmEy0-tISyAu9LqfLyKsXVGi0r-gjBh8FTCml561tgTXoa_cHRY8haCyxJb87EA5kOddakbfDuElq27E8U_EMJXRp6nGx7d1JhdNyRWjsawn9CDeJlTS-iD73joCk72P6Tq5Zkmb-p86wwY7pmgF4bNEyhnUSKWowm_Bw8jsqtEPygKeqZD0fkPcylDfVRVtbzFNZGv7zmP_8IYLCXCtWrwJfgTGYp7-Up-Xmz-QF-F_GK0
+http://www.plantuml.com/plantuml/uml/bLLDZzCm4BtxLynn5z4372j02-fbfKKSgBX6qsJIMYHsi2Sj-vFu7VmnnaxpuPLRkfMYHlQRDszcdfq7p-YuRnjbB1CqLFCQthrlFNm4xZoGELgzSd__bDInjaOfzRbaVKG1RtLBxeV3qghv5LQVuDlEapkIMuCZh0fFnbjtTxzCKI4ZuAzUUnreeNQsXG7evmmZaHfV0lltY5g3Dfg5T08FwrbeI-XxHu8ULc2Lg3nYqrCsq1zwhkp9p3Li2Aya_8BCv9wVw4ZDXfXAJjDFOdD0bLlCIbs8o18bchOEZMymAf4ogYBqFfr6hPrdOFSCR2C6-41nHYdJD6LX2hufEAmKMFuKlaiUc335upPD6nBPEkQA8F5SZRfvhNfFfGsIS_9diquyhoX9pL41lD6-avcJ-ue6zw6slfCiL4WaKofgs8aYTkYJaIsaJF9UKgkN2_dyjGuT6PU3FQ-5XLPnKUkcqMQ_TEE4k2L-DpZk_ydA0ydGM_9UDdFm3wlL4iykMFiwvru4d1aBjk5OLZSmbmTqR-0Sjnp5N7WsyMpYQBsnbFF_My2gSlAU35wivmYq1nmJGYtsYOwSsvoHC4x-iZrjbxZp8Z3sA5uvXJOoAxaqYbQRfK4LpByWRPHwGX_bqczikuPW3KkazD7iQRpFO2I7kvFcG-GnT1hkg7iLpc78TzDvymrHbvwWi14FTDY2gdTYMiZL1VBqJ7xPrUdByI0ovFFs3m00
 
 @startuml
+note left: 12ms = tps envoi-réception
+
+
 Activate TimerVraco
 TimerVraco -> Observer: read_sensor()
+note left: data aquisition from sensors
 Activate Observer
-Observer -> Sensor: init_sensor()
+Observer -> Sensor: init()
 Activate Sensor
 Observer -> Sensor: measure()
 Sensor --> Observer: value
@@ -16,14 +20,17 @@ BatteryLevelDetector --> Observer: value
 Deactivate BatteryLevelDetector
 
 Observer -> Translator: send_data()
+note left: first try to send the data
 Observer -> TimerVraco: start_timer_ack()
-note left: 12ms = tps envoi-réception
-TimerVraco -> Observer: send_again()
+TimerVraco -> Observer: timer_ack_IT()
+note left: end of the timer = fail
 Observer -> Translator: send_data()
+note left: second try to send the data
 Activate Translator
 Observer -> TimerVraco: start_timer_ack()
 
 Translator -> DispenserManager: update_state()
+note left: update database
 Deactivate Translator
 Activate DispenserManager
 DispenserManager -> DispenserManager: find_dispenser()
@@ -37,10 +44,15 @@ DispenserManager <-- Dispenser: char* message
 Deactivate Dispenser
 
 DispenserManager -> Observer: send_message(message, address)
+note left: there is a message for the dispenser
 Deactivate DispenserManager
 Observer -> TimerVraco: stop_timer_ack()
 Observer -> TimerVraco: set_measure_interval_min()
-note left: example of message
+note left
+           the message was for example : 
+           change measure interval (with the new value)
+end note
 Observer -> TimerVraco: start_timer_sleep()
+note left: time to sleep during measure_interval_min minutes
 Deactivate Observer
 @enduml
