@@ -1,0 +1,111 @@
+/**
+  ******************************************************************************
+  * @file    main.c
+  * @author  Ac6
+  * @version V1.0
+  * @date    01-December-2013
+  * @brief   Default main function.
+  ******************************************************************************
+*/
+
+
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_nucleo.h"
+#include "stm32f1_uart.h"
+#include "stm32f1_sys.h"
+#include "macro_types.h"
+#include "stm32f1_gpio.h"
+
+#include "x_nucleo_iks01a1_accelero.h"	//Capteur accéléromètre
+#include "stm32f1_ili9341.h"			//Si utilisation de l'écran TFT
+
+
+int main(void)
+{
+	HAL_Init();			//Initialisation de la couche logicielle HAL (Hardware Abstraction Layer)
+	BSP_GPIO_Enable();	//Activation des périphériques GPIO
+	SYS_ClockConfig();		//Configuration des horloges.
+
+	//Initialisation du port de la led Verte (carte Nucleo)
+	BSP_GPIO_PinCfg(LED_GREEN,GPIO_MODE_OUTPUT_PP,GPIO_PULLUP,GPIO_SPEED_FREQ_HIGH);
+
+	//Initialisation du port du bouton bleu (carte Nucleo)
+	BSP_GPIO_PinCfg(BLUE_BUTTON,GPIO_MODE_INPUT,GPIO_NOPULL,GPIO_SPEED_FREQ_HIGH);
+
+	//Initialisation de l'UART1 à la vitesse de 115200 bauds/secondes (92kbits/s) PB6 : Tx  | PB7 : Rx.
+	UART_init(UART1_ID,115200);
+
+	//"Indique que les printf sortent vers le périphérique UART1."
+	SYS_set_std_usart(UART1_ID, UART1_ID, UART1_ID);
+
+	//Initialisation de l'accéléromètre
+	DrvContextTypeDef *ACCELERO_handle = NULL;
+	SensorAxes_t ACC_Value;
+	BSP_ACCELERO_Init( ACCELERO_SENSORS_AUTO, (void **)&ACCELERO_handle );
+	BSP_ACCELERO_Sensor_Enable( ACCELERO_handle );
+
+	//Si utilisation de l'écran TFT :
+	static uint16_t t = 0;
+	ILI9341_Init();
+	ILI9341_Fill(ILI9341_COLOR_WHITE);
+	ILI9341_DrawCircle(20,20,5,ILI9341_COLOR_BLUE);
+	ILI9341_DrawLine(20,20,100,20,ILI9341_COLOR_RED);
+	ILI9341_DrawLine(20,20,20,100,ILI9341_COLOR_RED);
+	ILI9341_Putc(110,11,'x',&Font_11x18,ILI9341_COLOR_BLUE,ILI9341_COLOR_WHITE);
+	ILI9341_Putc(15,110,'y',&Font_11x18,ILI9341_COLOR_BLUE,ILI9341_COLOR_WHITE);
+
+
+	while(1)
+	{
+		/*if(HAL_GPIO_ReadPin(BLUE_BUTTON))
+			HAL_GPIO_WritePin(LED_GREEN,0);
+		else
+			HAL_GPIO_WritePin(LED_GREEN,1);
+		 */
+
+		uint8_t status;
+		if(BSP_ACCELERO_IsInitialized(ACCELERO_handle, &status) == COMPONENT_OK && status == 1)
+		{
+			//Récupération des données de l'accéléromètre
+			BSP_ACCELERO_Get_Axes(ACCELERO_handle, &ACC_Value);
+
+			//Traitement des données pour indiquer sur la led verte quand la carte est la tête en bas
+			if(ACC_Value.AXIS_Y > 300)
+				HAL_GPIO_WritePin(LED_GREEN,1);
+			else
+				HAL_GPIO_WritePin(LED_GREEN,0);
+
+			//Si plusieurs LEDS : il faut activer les ports correspondant en sortie.. et choisir une façon de les piloter
+
+
+			//Si utilisation de l'UART :
+			printf("ACC_X: %d, ACC_Y: %d, ACC_Z: %d\n",(int)ACC_Value.AXIS_X, (int)ACC_Value.AXIS_Y, (int)ACC_Value.AXIS_Z);
+
+			//Si utilisation de l'écran TFT :
+			t = (t + 1)%299;	//On choisi d'afficher 300 pixels sur l'axe du temps
+			int16_t value;
+			//On choisit un intervalle de -2000 à +2000
+			value = ACC_Value.AXIS_Y;
+			value = MIN(2000,value);
+			value = MAX(-2000,value);
+			value += 2000;	//On déplace de 0 à 4000
+			value /= 20; 	//On choisi d'afficher 200 pixels sur l'axe des valeurs, on divise donc par 20
+			ILI9341_DrawLine(40,			40+t,	239,		40+t,	ILI9341_COLOR_WHITE);
+			ILI9341_DrawLine(40+value,		40+t,	40+value+1,	40+t,	ILI9341_COLOR_BLUE);
+			//la même démarche est possible pour x et z !
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
