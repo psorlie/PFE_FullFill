@@ -1,2 +1,6 @@
 PCB/ir2/__Previews/projet_pcb_etu.PCBDOCPreview
 PCB/ir2/__Previews/projet_pcb_etu_formatA3.SchDocPreview
+VracBerry/Sockets/Websockets/Client/generate_percent.o
+*.o
+VracBerry/Sockets/Websockets/Client/client
+VracBerry/Sockets/Websockets/Serveur/server

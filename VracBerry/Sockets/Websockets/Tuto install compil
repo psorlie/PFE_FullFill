@@ -1,0 +1,39 @@
+Etapes pour l'utilisation de libwebsockets : 
+
+1 - installer cmake --> https://cmake.org/download/ (c'était déjà installé sur mon PC...)
+            $ sudo apt-get install cmake
+
+2 - instaler PERL
+            $ sudo apt-get install libtext-template-perl
+        
+3 - installer openSSL
+        Option 1 (pas testé) : sudo apt-get install openssl         (https://ubuntuforums.org/showthread.php?t=2110429)
+        Option 2 :  télécharger le code source dans /home      (https://www.openssl.org/source/)
+                    dans le dossier openssl décompressé lancer : 
+                        $ ./config
+                        $ make                                      (c'est looooooooong)
+                        $ make test
+                    copier le dossier openssl dans /usr/local
+                        $ sudo make install
+
+4 - installer la librairie libwebsockets (dans /usr/local) : 
+        git clone https://github.com/warmcat/libwebsockets.git      (https://libwebsockets.org/)
+        dans le dossier libwebsockets lancer : 
+            $ sudo mkdir build
+            $ sudo cd build
+            $ sudo cmake ..
+            $ sudo make && sudo make install
+
+5 - télécharger l'exemple simple pour l'utilisation de la librairie : git clone https://github.com/iamscottmoyers/simple-libwebsockets-example
+
+6 - changer (x2 dans le Makefile de l'exemple simple) :     `pkg-config libwebsockets --libs --cflags`      -->          -lpthread -lwebsockets
+
+7 - compiler l'exemple simple (make)
+
+8 - lancer les deux commandes suivantes (moi j'ai fait la deuxième puis la première mais je pense que la première suffit) : 
+        sudo ldconfig
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+9 - sur une console : ./client; sur une autre : ./server
+
+10- ouvrir un navigateur 127.0.0.1:8000 ; un nombre aléatoire doit s'actualiser toutes les secondes
