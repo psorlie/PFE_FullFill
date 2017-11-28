@@ -4,11 +4,13 @@
   width:100%;
 }
 
+
 #corps {
   min-width:90%;
 	padding:5px;
 	max-height:80%;
 	vertical-align:middle;
+	font-size: 150%;
 }
 .line {
   display: block;
