@@ -61,16 +61,25 @@ static uint8_t Product_set_size(char* new_product) {
 }
 
 static void Product_free(Product* this) {
+	assert(this != NULL);
+	printf("\n je vais free le name");
 	free(this->name);
+	this->name = (char*)NULL;
+	printf("\n name free");
+	printf("\n adresse du produit ? : %d", (int)this);
+	printf("\n il y a un truc en face : %d, %d", this->name, this->size);
+	//free(this->size);
+	printf("\n yolo tryhard");
 	free(this);
-	printf("\n toujours vivant apres le produit");
+	printf("\n destruction du produit ? ");
 }
 
 static Product* Product_set_name(Product* this, char* product) {
 	Product* return_value = NULL;
-	if(!product == NULL){
+	if(product != NULL){
 		memset(this->name, '\0', (this->size + 1));
-		strncpy(this->name, product, this->size);
+		snprintf(this->name, this->size + 1, "%s",product);
+		printf("\n ------- \n ------- \n %s", this->name);
 		return_value = this;
 	}
 	return return_value;
@@ -87,6 +96,7 @@ Product* Product_set_product(char* new_product){
 	this->size = Product_set_size(new_product);
 	this->name = (char*)malloc(sizeof(this->size + 1));
 	this = Product_set_name(this, new_product);
+	return this;
 }
 
 

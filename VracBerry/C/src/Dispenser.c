@@ -25,14 +25,28 @@ Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Fil
 }
 
 void Dispenser_free(Dispenser* this){
-	if(this->last_wash_date != NULL){
-		Date_free(this->last_wash_date);
-	}
-	if(this->product != NULL){
-		Product_destroy(this->product);
-	}
-	this->next_dispenser= NULL;
+/*	Date_free(this->last_wash_date);
+	this->last_wash_date= NULL;
+	Product_destroy(this->product);
+	this->product=NULL;*/
 	free(this);
+	/*printf("\n pointeur de date : %d", (int)this->last_wash_date);
+	if(this->next_dispenser->last_wash_date != NULL){
+		Date_free(this->next_dispenser->last_wash_date);
+		printf("\n détruire date");
+	}
+	printf("\n pointeur de produit : %d", (int)this->product);
+	if(this->next_dispenser->product != NULL){
+		Product_destroy(this->next_dispenser->product);
+		printf("\n détruire produit");
+	}*/
+
+	//this->product=NULL;
+	//this->last_wash_date=NULL;
+	//this->message=NULL;
+	//printf("\n \n \n --------- \n id : %d \n filling : %d \n battery : %d \n product size : %d \n date : %d  ",(int)this->next_dispenser->id, (int)this->next_dispenser->filling, (int)this->next_dispenser->battery, this->next_dispenser->product->size, this->next_dispenser->last_wash_date->current_day);
+	//free(this);
+	//printf("------------------------\nafter freeing the dispenser");
 }
 /* Getter */
 
@@ -103,10 +117,16 @@ int Dispenser_get_day(Dispenser* this) {
 /* Setter */
 
 void Dispenser_set_product(Dispenser* this, char* product) {
+	printf("\n avant l'assert");
 	assert(this != NULL);
+	printf("\n avant le if");
+	//printf("\n le produit pas encore set : %d, %d", (int)this->product->name, this->product->size);
 	if(this->product != NULL) {
+		printf("\n je passe dans le if ? ");
 		Product_destroy(this->product);
+		printf("\n ai-je détruit le produit ? ");
 	}
+	printf("\n après le if");
 	this->product = Product_set_product(product);
 }
 

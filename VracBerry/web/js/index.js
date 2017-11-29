@@ -1,9 +1,9 @@
 // connection created at the opening of the page
-var connection = new WebSocket('ws://192.168.50.1:80');
+var connection = new WebSocket( "ws://192.168.50.86:80", "example-protocol" );
 
 
 //function called everytime a socket is received
-function on_receive(data);
+function on_receive(data) {
   var msg = JSON.parse(data);
   switch (msg.type) {
     // is an answer to someone asking for the details of a dispenser

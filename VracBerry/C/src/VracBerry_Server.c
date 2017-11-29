@@ -11,10 +11,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "DispenserManager.h"
+#include "Application.h"
 
 int main(void) {
 	printf("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 	DispenserManager_add_dispenser(1, "cacao", 2, 3);
+	Application_update_dispenser(1);
+	/*
 	DispenserManager_add_dispenser(10, "chocolat", 20, 30);
 	DispenserManager_add_dispenser(30, "gnoutu", 40, 60);
 	printf("\n avant free");
@@ -58,6 +61,7 @@ int main(void) {
 	testas = DispenserManager_get_filling(10);
 	printf("\n testas : %d", testas);
 	// Implemented : Date, Id, Filling, Battery, Product / Managing linked list too
-
+	 *
+	 */
 	return EXIT_SUCCESS;
 }

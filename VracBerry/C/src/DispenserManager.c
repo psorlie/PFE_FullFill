@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "Dispenser.h"
 #include "DispenserManager.h"
@@ -81,7 +82,7 @@ void DispenserManager_free_dispenser(Dispenser_Id id) {
 		future_deleted_dispenser = before_deleted_dispenser->next_dispenser;
 		before_deleted_dispenser->next_dispenser = future_deleted_dispenser->next_dispenser;
 	}
-	//Dispenser_free(future_deleted_dispenser);
+	Dispenser_free(future_deleted_dispenser);
 	printf("\n \n premier : %d, deuxieme : %d", (int)dispenser_list->first_dispenser, (int)dispenser_list->first_dispenser->next_dispenser);
 
 }
@@ -112,8 +113,9 @@ Dispenser* DispenserManager_find_dispenser(Dispenser_Id id) {
 	bool has_been_found = false;
 
 	Dispenser* current_dispenser = dispenser_list->first_dispenser;
-		while (current_dispenser->next_dispenser != NULL && !has_been_found) {
+		while (current_dispenser != NULL && !has_been_found) {
 			if(current_dispenser->id == id){
+
 				has_been_found = true;
 			} else {
 				current_dispenser = current_dispenser->next_dispenser;
@@ -145,22 +147,22 @@ void DispenserManager_update_last_wash_date(Dispenser_Id id) {
 	Dispenser_set_current_date(dispenser);
 }
 
-Battery DispenserManager_get_battery(Dispenser_Id id) {
+uint8_t DispenserManager_get_battery(Dispenser_Id id) {
 	Battery battery = 0;
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	if(dispenser != NULL){
 		battery = Dispenser_get_battery(dispenser);
 	}
-	return battery;
+	return (uint8_t)battery;
 }
 
-Filling DispenserManager_get_filling(Dispenser_Id id) {
+uint8_t DispenserManager_get_filling(Dispenser_Id id) {
 	Filling filling = 0;
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	if(dispenser != NULL) {
 		filling = Dispenser_get_filling(dispenser);
 	}
-	return filling;
+	return  (uint8_t)filling;
 }
 
 char* DispenserManager_get_product(Dispenser_Id id) {

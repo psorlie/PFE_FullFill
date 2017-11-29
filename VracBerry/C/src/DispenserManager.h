@@ -30,9 +30,9 @@ extern void DispenserManager_update_last_wash_date(Dispenser_Id);
 
 extern void DispenserManager_add_message(MessageToSend* Dispenser_Id);
 
-extern Battery DispenserManager_get_battery(Dispenser_Id);
+extern uint8_t DispenserManager_get_battery(Dispenser_Id);
 
-extern Filling DispenserManager_get_filling(Dispenser_Id);
+extern uint8_t DispenserManager_get_filling(Dispenser_Id);
 
 extern char* DispenserManager_get_product(Dispenser_Id);
 

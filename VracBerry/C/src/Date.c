@@ -12,8 +12,10 @@
 #include "Date.h"
 
 bool Date_free(Date* this) {
+	this->current_day = 0;
+	this->year = 0;
 	free(this);
-	return (this == NULL);
+	return true;
 }
 
 Date* Date_set_current_date() {
