@@ -52,8 +52,7 @@ ob_implicit_flush();
     </div>
     <div id="detail_window">
       <form action="index.php" method="post">
-        <p> Produit <span id="name_product"></span></p>
-        <p> Nouveau nom du produit <input type="text" name="name" /> </p>
+        <p> Nouveau nom du produit : </p> <input type="text" id ="name_product" name="name" value="ERROR" />
       </form>
       <table>
         <tr>
@@ -67,6 +66,7 @@ ob_implicit_flush();
         <p> Dernier nettoyage le : <span id="last_washing_date_data"></span></p>
         <button id="data_request_from_detail"> Close </button>
         <button id="send_cleaning_update"> Nettoyage à ce jour </button>
+        <button id="send_name_update"> Mise à jour Produit </button>
     </div>
     <div id="network_window">
         <h3> Configuration du réseau </h3>

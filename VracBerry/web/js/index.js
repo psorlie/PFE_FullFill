@@ -8,11 +8,11 @@ function on_receive(data) {
   switch (msg.type) {
     // is an answer to someone asking for the details of a dispenser
     case "detail_answer":
-    setDetailWindow(msg.id, msg.filling, msg.battery, msg.date);
+    setDetailWindow(msg.id, msg.filling, msg.battery, msg.date, msg.name);
     break;
     // a update sent by the server
     case "update":
-    setUpdateButton(msg.id, msg.filling, msg.battery);
+    setUpdateButton(msg.id, msg.filling, msg.battery, msg.name);
     break;
     // server alert when a dispenser is dirty
     case "dirty_alert":
@@ -50,10 +50,11 @@ function send_asking_socket (type, current_window, new_window){
   $("#" + new_window).css('display','block');
 }
 // function called after receiving the detail for a dispenser : it fill the div with new data
-function setDetailWindow(id, filling, battery, date){
+function setDetailWindow(id, filling, battery, date, name){
   $("#filling_data").text(filling);
   $("#battery_data").text(battery);
   $("#last_washing_date_data").text(date);
+  $("#name_product").val(name);
 }
 
 // function called after receiving the network configuration : it fill the div with new data
@@ -137,6 +138,11 @@ $("#send_new_configuration").click(function() {
 
 // function called when the user want to send a cleaning update
 $("#send_cleaning_update").click(function() {
+  issue_called("not in beta version");
+});
+
+// function called when the user want to send the new name of a product
+$("#send_name_update").click(function() {
   issue_called("not in beta version");
 });
 
