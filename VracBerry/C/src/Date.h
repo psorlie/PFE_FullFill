@@ -17,7 +17,7 @@ typedef struct {
 
 extern Date* Date_set_current_date();
 
-extern bool Date_free(Date*);
+extern void Date_destroy(Date*);
 
 extern int Date_get_year(Date*);
 

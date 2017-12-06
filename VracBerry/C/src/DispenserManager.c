@@ -56,10 +56,13 @@ static bool DispenserManager_exist(Dispenser_Id id) {
 
 void DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {
+		printf("initialisation\n");
 		dispenser_list = DispenserManager_initialisation();
 	}
+	assert(dispenser_list != NULL);
 	Dispenser* new_dispenser = Dispenser_create(id, product, battery, filling);
-	new_dispenser->next_dispenser = dispenser_list->first_dispenser;
+	Dispenser* old_first_dispenser = dispenser_list->first_dispenser;
+	new_dispenser->next_dispenser = old_first_dispenser;
 	dispenser_list->first_dispenser = new_dispenser;
 }
 
@@ -75,37 +78,37 @@ void DispenserManager_free_dispenser(Dispenser_Id id) {
 	if(dispenser_list->first_dispenser->id == id) {
 		future_deleted_dispenser = dispenser_list->first_dispenser;
 		dispenser_list->first_dispenser = dispenser_list->first_dispenser->next_dispenser;
-		printf("premier : %d, deuxieme : %d", (int)dispenser_list->first_dispenser, (int)dispenser_list->first_dispenser->next_dispenser);
-
 	} else {
 		before_deleted_dispenser = DispenserManager_find_before_dispenser(id);
 		future_deleted_dispenser = before_deleted_dispenser->next_dispenser;
 		before_deleted_dispenser->next_dispenser = future_deleted_dispenser->next_dispenser;
 	}
-	Dispenser_free(future_deleted_dispenser);
-	printf("\n \n premier : %d, deuxieme : %d", (int)dispenser_list->first_dispenser, (int)dispenser_list->first_dispenser->next_dispenser);
-
+	Dispenser_destroy(future_deleted_dispenser);
 }
 
 static Dispenser* DispenserManager_find_before_dispenser(Dispenser_Id id) {
 	assert(dispenser_list != NULL);
 	bool has_been_found = false;
+	int nbr_de_boucle = 0;
 
 	Dispenser* current_dispenser = dispenser_list->first_dispenser;
-	if(current_dispenser->id != id){
+	Dispenser* result = NULL;
+	if(current_dispenser->id == id){
 		has_been_found = true;
 	}
-	while (current_dispenser->next_dispenser != NULL && !has_been_found) {
-		if(current_dispenser->next_dispenser->id == id){
+	do {
+		nbr_de_boucle++;
+		if(current_dispenser->next_dispenser->id ==  id) {
 			has_been_found = true;
+			result = current_dispenser;
 		} else {
 			current_dispenser = current_dispenser->next_dispenser;
 		}
-	}
-	if (!has_been_found) {
-		current_dispenser = (void*)NULL;
-	}
-	return current_dispenser;
+	} while (current_dispenser->next_dispenser != NULL && !has_been_found);
+
+	return result;
+
+
 }
 
 Dispenser* DispenserManager_find_dispenser(Dispenser_Id id) {
@@ -185,11 +188,25 @@ int DispenserManager_get_cleaning_day(Dispenser_Id id ) {
 	return day;
 }
 
-int DispenserManager_get_cleaning_year(Dispenser_Id id ) {
+int DispenserManager_get_cleaning_year(Dispenser_Id id) {
 	int year = -1;
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	if(dispenser != NULL) {
 		year = Dispenser_get_year(dispenser);
 	}
 	return year;
+}
+
+void DispenserManager_printf(char* arg) {
+	Dispenser* current_dispenser = dispenser_list->first_dispenser;
+	printf("---------------------------------------------------------------------------------\n");
+	if(current_dispenser == NULL) {
+		printf("NO DISPENSER CREATED \n");
+	} else {
+		do {
+			Dispenser_printf(current_dispenser, arg);
+			current_dispenser = current_dispenser->next_dispenser;
+		} while (current_dispenser != NULL);
+	}
+	printf("--------------------------- fin printf ------------------------------------------\n");
 }

@@ -9,6 +9,20 @@
 
 #include "MessageToSend.h"
 
+static void MessageToSend_free(MessageToSend*);
+
 bool MessageToSend_exist(MessageToSend* this) {
 	return (this != NULL);
 }
+
+void MessageToSend_destroy(MessageToSend* this) {
+	if (this != NULL) {
+		MessageToSend_free(this);
+	}
+}
+
+static void MessageToSend_free(MessageToSend* this) {
+	free(this);
+}
+
+

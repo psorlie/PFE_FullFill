@@ -11,11 +11,12 @@
 
 #include "Date.h"
 
-bool Date_free(Date* this) {
+static void Date_free(Date*);
+
+static void Date_free(Date* this) {
 	this->current_day = 0;
 	this->year = 0;
 	free(this);
-	return true;
 }
 
 Date* Date_set_current_date() {
@@ -44,4 +45,10 @@ int Date_get_day(Date* this) {
 	int ret = this->current_day;
 	assert(ret >= 0 && ret <= 366);
 	return ret;
+}
+
+void Date_destroy(Date *this) {
+	if(this != NULL) {
+		Date_free(this);
+	}
 }

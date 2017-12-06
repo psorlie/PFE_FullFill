@@ -42,4 +42,6 @@ extern int DispenserManager_get_cleaning_year(Dispenser_Id);
 
 extern MessageToSend* DispenserManager_get_message(Dispenser_Id);
 
+extern void DispenserManager_printf(char*);
+
 #endif /* SRC_DISPENSERMANAGER_H_ */
