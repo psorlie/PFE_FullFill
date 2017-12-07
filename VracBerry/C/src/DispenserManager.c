@@ -22,7 +22,7 @@ static Dispenser* DispenserManager_find_before_dispenser(Dispenser_Id);
 
 static Dispenser_list* DispenserManager_initialisation();
 
-static bool DispenserManager_exist(Dispenser_Id);
+//TODO static bool DispenserManager_exist(Dispenser_Id);
 
 static Dispenser_list* DispenserManager_initialisation() {
 	assert(dispenser_list == NULL);
@@ -33,8 +33,8 @@ static Dispenser_list* DispenserManager_initialisation() {
 	}
 	return list;
 }
-
-static bool DispenserManager_exist(Dispenser_Id id) {
+//TODO
+/*static bool DispenserManager_exist(Dispenser_Id id) {
 	assert(dispenser_list != NULL);
 	bool has_been_found = false;
 
@@ -52,7 +52,7 @@ static bool DispenserManager_exist(Dispenser_Id id) {
 		}
 	return has_been_found;
 
-}
+}*/
 
 void DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {

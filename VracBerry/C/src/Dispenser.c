@@ -11,7 +11,92 @@
 
 #include "Dispenser.h"
 
+
+typedef enum DispenserAction {
+	A_SEND_INFOS = 0,
+	A_ALREADY_KNOWN,
+	A_INIT_COUNTERS,
+	A_RECEIVED_MESSAGE,
+	A_INC_CPT_TIME_SINCE_LAST_MESSAGE,
+	A_RESET_TIMER,
+	A_SUP_CPT_TIME_SINCE_LAST_MESSAGE,
+	A_INVALID_DATA,
+	A_MAX_CPT_INVALID_MESSAGE,
+	A_ASK_NEW_MESSAGE,
+	A_VALID_DATA,
+	A_SEND_ACK,
+	A_SEND_MESSAGE,
+	A_DESTROY,
+	A_NBR_ACTION
+} DispenserAction;
+
+static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
+		[S_INIT][E_ALREADY_KNOWN] =
+		{S_WAIT_MESSAGE, A_SEND_INFOS},
+		[S_INIT][E_UNKNOWN] =
+		{S_RUN, A_ALREADY_KNOWN},
+
+		[S_WAIT_MESSAGE][E_RECEIVED_MESSAGE] =
+		{S_RUN, A_INIT_COUNTERS},
+
+		[S_RUN][E_RECEIVED_MESSAGE] =
+		{S_CHECK_DATA, A_RECEIVED_MESSAGE},
+		[S_RUN][E_TIMER] =
+		{S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE, A_INC_CPT_TIME_SINCE_LAST_MESSAGE},
+		[S_RUN][E_DESTROY] =
+		{S_DEATH, A_DESTROY},
+
+		[S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE][E_INF_CPT_TIME_SINCE_LAST_MESSAGE] =
+		{S_RUN, A_RESET_TIMER},
+		[S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE][E_SUP_CPT_TIME_SINCE_LAST_MESSAGE] =
+		{S_LOST, A_SUP_CPT_TIME_SINCE_LAST_MESSAGE},
+
+		[S_LOST][E_NEW_MESSAGE] =
+		{S_CHECK_DATA, A_RESET_TIMER},
+		[S_LOST][E_DESTROY] =
+		{S_DEATH, A_DESTROY},
+
+		[S_CHECK_DATA][E_VALID_DATA] =
+		{S_CHECK_MESSAGE, A_VALID_DATA},
+		[S_CHECK_DATA][E_INVALID_DATA] =
+		{S_CHECK_CPT_INVALID_MESSAGE, A_INVALID_DATA},
+
+		[S_CHECK_CPT_INVALID_MESSAGE][E_INF_CPT_INVALID_MESSAGE] =
+		{S_LOST, A_ASK_NEW_MESSAGE},
+		[S_CHECK_CPT_INVALID_MESSAGE][E_MAX_CPT_INVALID_MESSAGE] =
+		{S_DEFICIENT, A_MAX_CPT_INVALID_MESSAGE},
+
+		[S_DEFICIENT][E_DESTROY] = {S_DEATH, A_DESTROY},
+
+		[S_CHECK_MESSAGE][E_NO_MESSAGE] =
+		{S_RUN, A_SEND_ACK},
+		[S_CHECK_MESSAGE][E_MESSAGE] =
+		{S_RUN, A_SEND_MESSAGE}
+};
+
 static void Dispenser_free(Dispenser*);
+static void Dispenser_run(Dispenser*, DispenserMqMsg);
+static void Dispenser_performAction(Dispenser*, DispenserAction, DispenserMqMsg);
+
+static void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
+	DispenserAction action;
+	if(g_stateMachine[this->state] == S_NOP){
+		perror("[Dispenser] - Perte d'évènement");
+	} else {
+		action = g_stateMachine[this->state][message.event].futurAction;
+		Dispenser_performAction(this, action, message);
+		this->state = g_stateMachine[this->state][message.event].futurState;
+	}
+}
+
+static void Dispenser_performAction(Dispenser* this, DispenserAction action, DispenserMqMsg message) {
+	switch(action) {
+	default:
+		perror("UNUSED STATE MACHINE");
+		break;
+	}
+}
+
 
 Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	Dispenser * this;
@@ -173,7 +258,11 @@ void Dispenser_printf(Dispenser* this, char* arg) {
 	printf("Dispenser numéro %d : contient du %s, est rempli à %d %% et sa batterie est à %d %%\n", this->id, product, this->filling, this->battery);
 	if(strcmp(arg, "v") == 0) {
 		printf("Date dernier lavage : %d de l\' année %d\n", this->last_wash_date->current_day, this->last_wash_date->year);
-		printf("message en queue pour le dispenser : %s\n", this->message);
+		if(this->message !=NULL){
+			printf("message en queue pour le dispenser : %s\n", this->message->message);
+		} else {
+			printf("Pas de message en queue \n");
+		}
 	}
 	printf("---------------------------------------------------------------------------------\n");
 
