@@ -75,7 +75,9 @@ static struct lws_protocols protocols[] =
 
 int Postman_send(char* text)
 {
-	struct lws_context_creation_info info;
+	printf("\nsortie test pour envoi json : %s", text);
+	free(text);
+	/*struct lws_context_creation_info info;
 	memset( &info, 0, sizeof(info) );
 
 	info.port = CONTEXT_PORT_NO_LISTEN;
@@ -90,7 +92,7 @@ int Postman_send(char* text)
 		struct timeval tv;
 		gettimeofday( &tv, NULL );
 
-		/* Connect if we are not connected to the server. */
+		// Connect if we are not connected to the server.
 		if( !web_socket && tv.tv_sec != old )
 		{
 			struct lws_client_connect_info ccinfo = {0};
@@ -107,16 +109,16 @@ int Postman_send(char* text)
 
 		if( tv.tv_sec != old )
 		{
-			/* Send a random number to the server every second. */
+			// Send a random number to the server every second.
 			lws_callback_on_writable( web_socket );
 			old = tv.tv_sec;
 		}
 
-		lws_service( context, /* timeout_ms = */ 5000 );
+		//lws_service( context, ////////timeout_ms =////////  5000 );
 
 	lws_context_destroy( context );
 
-	return 0;
+	return 0;*/
 }
 
 static size_t get_value(char* string_to_send){

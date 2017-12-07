@@ -12,7 +12,9 @@
 
 extern void Application_display_all_dispenser(Dispenser*);
 
-extern void Application_update_dispenser(Dispenser_Id);
+extern void Application_update_dispenser(Dispenser*);
+
+extern void Application_detailed_dispenser(Dispenser*);
 
 // extern void Application_set_network_configuration(Network*);
 
