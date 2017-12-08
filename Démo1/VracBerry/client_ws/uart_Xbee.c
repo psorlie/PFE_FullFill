@@ -18,12 +18,14 @@ uint32_t minAnalogVal= 1300;//2500;
 uint32_t scaledResult = 0;
 uint32_t buf = 50;
 
+/************* Calcule un pourcentage aléatoire, pour la démo1 ************/
 // On suppose a<b
 int rand_a_b(int a, int b){
     return rand()%(b-a) +a;
 }
 
-/* string_to_send : pointeur vers la chaine à envoyer au serveur; size : taille de la chaine en question */
+/************* Récupération du pourcentage à envoyer au serveur ***********/
+// string_to_send : pointeur vers la chaine à envoyer au serveur; size : taille de la chaine en question
 size_t get_value(char* string_to_send){
 	size_t size;
 	if((scaledResult<101) && (scaledResult> 0)){
@@ -38,6 +40,7 @@ size_t get_value(char* string_to_send){
 		
 }
 
+/************** Initialisation de l'UART ****************/
 void init(){
 	//-------------------------
 	//----- SETUP USART 0 -----
@@ -85,6 +88,7 @@ void init(){
 	printf("init succeed\n");
 }
 
+/*************** Fonction d'envoi de données à l'UART, non utilisée pour la démo1 ***************/
 void transmittData(){
 	//----- TX BYTES -----
 	unsigned char tx_buffer[20];
@@ -97,8 +101,6 @@ void transmittData(){
 	*p_tx_buffer++ = 'l';
 	*p_tx_buffer++ = 'o';
 	
-	
-	
 	if (uart0_filestream != -1)
 	{
 		int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));		//Filestream, bytes to write, number of bytes to write
@@ -110,11 +112,13 @@ void transmittData(){
 	printf("sending hello\n");
 }
 
+/*************** Fermeture de l'UART ******************/
 void closeUart(){
 	//----- CLOSE THE UART -----
 	close(uart0_filestream);
 }
 
+/*************** Lecture de données venant de l'UART ***************/
 void readingData(){
 	
 	//----- CHECK FOR ANY RX BYTES -----
@@ -142,6 +146,7 @@ void readingData(){
 	}
 }
 
+/************ Transforme en binaire les données reçues par l'UART **********/
 char *decimal_to_binary(int n)
 {
    int c, d, count;
@@ -170,21 +175,8 @@ char *decimal_to_binary(int n)
 }
 
 
-
-int bin2int(const char *bin) 
-{
-    int i, j;
-    j = sizeof(int)*16;
-    while ( (j--) && ((*bin=='0') || (*bin=='1')) ) {
-        i <<= 1;
-        if ( *bin=='1' ) i++;
-        bin++;
-    }
-    return i;
-}
-
-
-
+/************* Transforme en entier la valeur reçue par le capteur analogique ************/
+// Fonction à déporter au niveau du crotex M0
 uint32_t binstr2int(char *bs){
     uint32_t ret = 0;
     uint32_t val = 1;
@@ -197,7 +189,7 @@ uint32_t binstr2int(char *bs){
     return (ret);
 }
 
-
+/*************** Fonction qui initialise l'UART, lit les données et renvoie le taux de remplissage *******************/
 int receiveFormatSend (){
 	if (a == 1){
 		init();
@@ -213,10 +205,6 @@ int receiveFormatSend (){
 	strcat(highByteVal, lowByteVal);	
 	printf("cat : %s \n", highByteVal);
 	
-	//char* test = "1111111111111111";
-	//int testresult = bin2int(test);
-	//printf("test result%d\n", testresult);
-	
 	uint32_t result = binstr2int(highByteVal);
 	
 	//int result = bin2int(highByteVal);
@@ -226,57 +214,5 @@ int receiveFormatSend (){
 	printf("scaled result%d\n", scaledResult);
 	return scaledResult;
 }
-	
-/*
-int main(){
-	//unsigned char rx_buffer[1];
-	//int decVal;
-	int maxAnalogVal= 3500;
-	int minAnalogVal= 2500;
-	init();
-	int a = 1;
-	while(1){
-		readingData();
-		
-		usleep(1000000);
-		int a = 1;
-		//decVal = atoi(rx_buffer);
-		//printf("%d\n", decVal);
-		
-		char *highByteVal=decimal_to_binary((int) rx_buffer[0]);
-		printf("%s\n", highByteVal);
-		char *lowByteVal=decimal_to_binary((int) rx_buffer[1]);
-		printf("%s\n", lowByteVal);
-		strcat(highByteVal, lowByteVal);
-		
-		//char analogVal [100] = highByteVal;
-		
-		//printf("%s\n", highByteVal);
-		//long binResult = (long)highByteVal;
-		//int decResult = binaryToDecimal(binResult);
-		//int result = binaryToDecimal(*highByteVal);
-		int result = bin2int(highByteVal);
-		printf("result final%d\n", result);
-		scaledResult = 100*(result/(maxAnalogVal-minAnalogVal));
-		//if (result < 2)
-		if (a == 1){
-			for(int b=0;b<2;b++){
-				printf("%d\n", rx_buffer[b]);
-			}
-		a =0;
-		
-		}
-		
-			//if (rx_buffer[0] != 0){
-			//	decVal = atoi(rx_buffer);
-			//	printf("%d\n", decVal);
-			//}
-		//char s[] = "-975310";
-		//printf(asc2int(rx_buffer)\n);
-		//transmittData();
-		//usleep(1000000);
-	}
-	return (0);
-}*/
 
 
