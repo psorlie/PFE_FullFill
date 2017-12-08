@@ -1,3 +1,7 @@
+//Dans ce fichier, deux choses à modifier : 
+//- La callback pour la page à servir
+//- Le main pour le port des Websockets
+
 #include "libwebsockets.h"
 #include <string.h>
 #include <stdio.h>
@@ -7,6 +11,7 @@ static int callback_http( struct lws *wsi, enum lws_callback_reasons reason, voi
 	switch( reason )
 	{
 		case LWS_CALLBACK_HTTP:
+			// Si besoin changer "index.html" en une autre page Web
 			//lws_serve_http_file( wsi, "example.html", "text/html", NULL, 0 );
 			lws_serve_http_file( wsi, "index.html", "text/html", NULL, 0 );
 			break;

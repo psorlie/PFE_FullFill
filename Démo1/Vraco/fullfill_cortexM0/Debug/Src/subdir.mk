@@ -39,7 +39,7 @@ Src/%.o: ../Src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: MCU GCC Compiler'
 	@echo $(PWD)
-	arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft '-D__weak=__attribute__((weak))' '-D__packed=__attribute__((__packed__))' -DUSE_HAL_DRIVER -DSTM32L031xx -I"C:/Users/pierr/Desktop/fullfill_cortexM0/Inc" -I"C:/Users/pierr/Desktop/fullfill_cortexM0/Drivers/STM32L0xx_HAL_Driver/Inc" -I"C:/Users/pierr/Desktop/fullfill_cortexM0/Drivers/STM32L0xx_HAL_Driver/Inc/Legacy" -I"C:/Users/pierr/Desktop/fullfill_cortexM0/Drivers/CMSIS/Device/ST/STM32L0xx/Include" -I"C:/Users/pierr/Desktop/fullfill_cortexM0/Drivers/CMSIS/Include" -I"C:/Users/pierr/Desktop/fullfill_cortexM0/Inc"  -Og -g3 -Wall -fmessage-length=0 -ffunction-sections -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft '-D__weak=__attribute__((weak))' '-D__packed=__attribute__((__packed__))' -DUSE_HAL_DRIVER -DSTM32L031xx -I"D:/ESEO_I3/PFE/Git/Démo1/Vraco/fullfill_cortexM0/Inc" -I"D:/ESEO_I3/PFE/Git/Démo1/Vraco/fullfill_cortexM0/Drivers/STM32L0xx_HAL_Driver/Inc" -I"D:/ESEO_I3/PFE/Git/Démo1/Vraco/fullfill_cortexM0/Drivers/STM32L0xx_HAL_Driver/Inc/Legacy" -I"D:/ESEO_I3/PFE/Git/Démo1/Vraco/fullfill_cortexM0/Drivers/CMSIS/Device/ST/STM32L0xx/Include" -I"D:/ESEO_I3/PFE/Git/Démo1/Vraco/fullfill_cortexM0/Drivers/CMSIS/Include" -I"D:/ESEO_I3/PFE/Git/Démo1/Vraco/fullfill_cortexM0/Inc"  -Og -g3 -Wall -fmessage-length=0 -ffunction-sections -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
