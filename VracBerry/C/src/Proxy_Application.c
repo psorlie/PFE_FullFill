@@ -144,6 +144,10 @@ void Application_detailed_dispenser(Dispenser* this) {
 	Postman_send(prepare_string);
 }
 
+extern void Application_warn_dispenser_is_broken(Dispenser_Id) {
+	perror("[Application-Proxy] - On prévient l'application que le dispenser est cassé");
+}
+
 
 
 // extern void Application_set_network_configuration(Network*);

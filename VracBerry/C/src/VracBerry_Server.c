@@ -12,11 +12,18 @@
 #include <stdlib.h>
 #include "DispenserManager.h"
 #include "Application.h"
+#include "Postman.h"
 
 int main(void) {
 	printf("!!!Hello World!!!\n"); /* prints !!!Hello World!!! */
+	//Postman_init();
+	sleep(1);
+	printf("je vais essayer !\n");
+	//Postman_send("bretzel au nutella\0");
+
+	DispenserManager_init();
 	DispenserManager_add_dispenser(1, "cacao", 2, 3);
-	DispenserManager_add_dispenser(2, "chocolat", 4, 6);
+	/*DispenserManager_add_dispenser(2, "chocolat", 4, 6);
 	Dispenser* this = DispenserManager_find_dispenser(1);
 	Application_update_dispenser(this);
 	this = DispenserManager_find_dispenser(2);

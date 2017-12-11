@@ -26,4 +26,6 @@ extern void Application_warn_empty_dispenser(Dispenser_Id);
 
 extern void Application_warn_empty_battery(Dispenser_Id);
 
+extern void Application_warn_dispenser_is_broken(Dispenser_Id);
+
 #endif /* SRC_APPLICATION_H_ */

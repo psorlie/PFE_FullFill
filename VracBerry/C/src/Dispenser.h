@@ -16,15 +16,17 @@
 #include "Product.h"
 #include "MessageToSend.h"
 
-#define MANAGER_MQ_NAME "/mq_dispatcher_manager"
-
 #define MESSAGE_TO_SEND_SIZE (20)
 #define DATE_SIZE (10)
-#define MQ_MSG_SIZE (2048)
+#define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
+#define MAX_COUNT_INVALID_MESSAGE (5)
+#define MAX_COUNT_LOST_MESSAGE (5)
 
 typedef uint8_t Battery;
 typedef uint8_t Filling;
 typedef uint8_t Dispenser_Id;
+typedef uint8_t Invalid_count;
+typedef uint8_t Lost_count;
 
 typedef enum DispenserState_t {
 	S_INIT = 0,
@@ -42,24 +44,43 @@ typedef enum DispenserState_t {
 } DispenserState;
 
 typedef enum {
-	E_UNKNOWN = 0,
-	E_ALREADY_KNOWN,
+	E_UNKNOWN = 0, // TODO
+	E_ALREADY_KNOWN, // TODO
 	E_RECEIVED_MESSAGE,
-	E_TIMER,
+	E_TIMER, // TODO
 	E_INF_CPT_TIME_SINCE_LAST_MESSAGE,
 	E_SUP_CPT_TIME_SINCE_LAST_MESSAGE,
-	E_NEW_MESSAGE,
 	E_INVALID_DATA,
 	E_MAX_CPT_INVALID_MESSAGE,
 	E_INF_CPT_INVALID_MESSAGE,
 	E_VALID_DATA,
+	E_ASK_UPDATE,
+	E_ASK_DETAILED,
 	E_NO_MESSAGE,
 	E_MESSAGE,
-	E_DESTROY,
+	E_DESTROY, // TODO
 	E_NBR_EVENT
 } DispenserEvent;
 
-typedef struct DispenserAction_t DispenserAction;
+typedef enum DispenserAction {
+	A_SEND_INFOS = 0,
+	A_ALREADY_KNOWN,
+	A_INIT_COUNTERS,
+	A_RECEIVED_MESSAGE,
+	A_INC_CPT_TIME_SINCE_LAST_MESSAGE,
+	A_RESET_TIMER,
+	A_SUP_CPT_TIME_SINCE_LAST_MESSAGE,
+	A_INVALID_DATA,
+	A_MAX_CPT_INVALID_MESSAGE,
+	A_ASK_NEW_MESSAGE,
+	A_VALID_DATA,
+	A_NO_MESSAGE_AND_UPDATE,
+	A_SEND_DETAILED,
+	A_SEND_UPDATE,
+	A_MESSAGE_AND_UPDATE,
+	A_DESTROY,
+	A_NBR_ACTION
+} DispenserAction;
 
 typedef struct DispenserTransition_t {
 	DispenserState futurState;
@@ -69,13 +90,15 @@ typedef struct DispenserTransition_t {
 typedef struct {
 	DispenserEvent event;
 	Dispenser_Id id;
+	Battery battery;
+	Filling filling;
 } DispenserMqMsg;
 
 typedef union
 {
-	char buffer[MQ_MSG_SIZE];
+	char buffer[MQ_DISPENSER_MANAGER_MSG_SIZE];
 	DispenserMqMsg data;
-} MqMsgAdapter;
+} DispenserMqMsgAdapter;
 
 typedef struct Dispenser_t Dispenser;
 
@@ -84,6 +107,8 @@ struct Dispenser_t {
 	Filling filling;
 	Battery battery;
 	DispenserState state;
+	Invalid_count invalid_count;
+	Lost_count lost_count;
 	Product* product;
 	Date* last_wash_date;
 	Dispenser* next_dispenser;
@@ -123,5 +148,8 @@ extern uint8_t Dispenser_get_product_size(Dispenser*);
 extern MessageToSend* Dispenser_get_message(Dispenser*);
 
 extern void Dispenser_printf(Dispenser*, char*);
+
+extern void Dispenser_run(Dispenser*, DispenserMqMsg);
+
 
 #endif /* SRC_DISPENSER_H_ */

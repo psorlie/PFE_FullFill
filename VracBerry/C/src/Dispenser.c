@@ -10,25 +10,7 @@
 #include <stdio.h>
 
 #include "Dispenser.h"
-
-
-typedef enum DispenserAction {
-	A_SEND_INFOS = 0,
-	A_ALREADY_KNOWN,
-	A_INIT_COUNTERS,
-	A_RECEIVED_MESSAGE,
-	A_INC_CPT_TIME_SINCE_LAST_MESSAGE,
-	A_RESET_TIMER,
-	A_SUP_CPT_TIME_SINCE_LAST_MESSAGE,
-	A_INVALID_DATA,
-	A_MAX_CPT_INVALID_MESSAGE,
-	A_ASK_NEW_MESSAGE,
-	A_VALID_DATA,
-	A_SEND_ACK,
-	A_SEND_MESSAGE,
-	A_DESTROY,
-	A_NBR_ACTION
-} DispenserAction;
+#include "DispenserManager.h"
 
 static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		[S_INIT][E_ALREADY_KNOWN] =
@@ -45,13 +27,18 @@ static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		{S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE, A_INC_CPT_TIME_SINCE_LAST_MESSAGE},
 		[S_RUN][E_DESTROY] =
 		{S_DEATH, A_DESTROY},
+		[S_RUN][E_ASK_UPDATE] =
+		{S_RUN, A_SEND_UPDATE},
+		[S_RUN][E_ASK_DETAILED] =
+		{S_RUN, A_SEND_DETAILED},
+
 
 		[S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE][E_INF_CPT_TIME_SINCE_LAST_MESSAGE] =
 		{S_RUN, A_RESET_TIMER},
 		[S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE][E_SUP_CPT_TIME_SINCE_LAST_MESSAGE] =
 		{S_LOST, A_SUP_CPT_TIME_SINCE_LAST_MESSAGE},
 
-		[S_LOST][E_NEW_MESSAGE] =
+		[S_LOST][E_RECEIVED_MESSAGE] =
 		{S_CHECK_DATA, A_RESET_TIMER},
 		[S_LOST][E_DESTROY] =
 		{S_DEATH, A_DESTROY},
@@ -69,18 +56,56 @@ static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		[S_DEFICIENT][E_DESTROY] = {S_DEATH, A_DESTROY},
 
 		[S_CHECK_MESSAGE][E_NO_MESSAGE] =
-		{S_RUN, A_SEND_ACK},
+		{S_RUN, A_NO_MESSAGE_AND_UPDATE},
 		[S_CHECK_MESSAGE][E_MESSAGE] =
-		{S_RUN, A_SEND_MESSAGE}
+		{S_RUN, A_MESSAGE_AND_UPDATE}
 };
 
 static void Dispenser_free(Dispenser*);
-static void Dispenser_run(Dispenser*, DispenserMqMsg);
+
 static void Dispenser_performAction(Dispenser*, DispenserAction, DispenserMqMsg);
 
-static void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
+static void Dispenser_send_ack(Dispenser*);
+
+static void Dispenser_send_message(Dispenser*);
+
+static MessageToSend* Dispenser_get_acknowledge_message();
+
+static Invalid_count Dispenser_get_invalid_count(Dispenser*);
+
+static void Dispenser_set_invalid_count(Dispenser*, Invalid_count);
+
+static void Dispenser_reset_invalid_count(Dispenser*);
+
+static void Dispenser_increment_invalid_count(Dispenser*);
+
+static bool Dispenser_has_reached_max_invalid_message(Dispenser*);
+
+static void Dispenser_ask_new_message(Dispenser*);
+
+static MessageToSend* Dispenser_get_repeat_message();
+
+static void Dispenser_save_data(Dispenser*, DispenserMqMsg);
+
+static void Dispenser_check_invalid_message_count(Dispenser*);
+
+static Lost_count Dispenser_get_lost_count(Dispenser*);
+
+static void Dispenser_set_lost_count(Dispenser*, Lost_count);
+
+static void Dispenser_reset_lost_count(Dispenser*);
+
+static void Dispenser_increment_lost_count(Dispenser*);
+
+static void Dispenser_check_lost_message_count(Dispenser*);
+
+static bool Dispenser_has_reached_max_lost_message(Dispenser*);
+
+
+
+void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
 	DispenserAction action;
-	if(g_stateMachine[this->state] == S_NOP){
+	if(g_stateMachine[this->state][message.event].futurState == S_NOP){
 		perror("[Dispenser] - Perte d'évènement");
 	} else {
 		action = g_stateMachine[this->state][message.event].futurAction;
@@ -91,8 +116,61 @@ static void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
 
 static void Dispenser_performAction(Dispenser* this, DispenserAction action, DispenserMqMsg message) {
 	switch(action) {
+	//TODO case A_SEND_INFOS:
+	//TODO break;
+	//TODO case A_ALREADY_KNOWN:
+	//TODO break;
+	//TODO case A_INIT_COUNTERS:
+	//TODO break;
+	case A_RECEIVED_MESSAGE:
+		Dispenser_reset_lost_count(this);
+		DispenserManager_check_conformity_data(message);
+		break;
+	case A_INC_CPT_TIME_SINCE_LAST_MESSAGE:
+		Dispenser_increment_lost_count(this);
+		Dispenser_check_lost_message_count(this);
+		break;
+	//TODO case A_RESET_TIMER:
+	//TODO break;
+	case A_SUP_CPT_TIME_SINCE_LAST_MESSAGE:
+		Dispenser_set_battery(this, 0);
+		DispenserManager_send_update(this);
+		break;
+	case A_INVALID_DATA:
+		Dispenser_increment_invalid_count(this);
+		Dispenser_ask_new_message(this);
+		Dispenser_check_invalid_message_count(this);
+		break;
+	case A_MAX_CPT_INVALID_MESSAGE:
+		DispenserManager_send_warning_broken_dispenser(this->id);
+		DispenserManager_prepare_destroy_dispenser(this->id);
+		break;
+	//TODO case A_ASK_NEW_MESSAGE:
+	//TODO break;
+	case A_VALID_DATA:
+		Dispenser_reset_invalid_count(this);
+		Dispenser_save_data(this, message);
+		DispenserManager_check_message(this);
+		break;
+	case A_DESTROY:
+		DispenserManager_free_dispenser(this->id);
+		break;
+	case A_SEND_UPDATE:
+		DispenserManager_send_update(this);
+		break;
+	case A_SEND_DETAILED:
+		DispenserManager_send_detailed_dispenser(this);
+		break;
+	case A_NO_MESSAGE_AND_UPDATE:
+		Dispenser_send_ack(this);
+		DispenserManager_send_update(this);
+		break;
+	case A_MESSAGE_AND_UPDATE:
+		Dispenser_send_message(this);
+		DispenserManager_send_update(this);
+		break;
 	default:
-		perror("UNUSED STATE MACHINE");
+		perror("NOT COMPLETED STATE MACHINE");
 		break;
 	}
 }
@@ -104,10 +182,12 @@ Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Fil
 	this->battery = 0;
 	this->filling = 0;
 	this->id = 0;
+	this->invalid_count = 0;
 	this->last_wash_date = NULL;
 	this->product = NULL;
 	this->next_dispenser = NULL;
 	this->message = NULL;
+	this->state = S_INIT;
 	Dispenser_set_id(this, id);
 	Dispenser_set_filling(this, filling);
 	Dispenser_set_battery(this, battery);
@@ -126,6 +206,7 @@ static void Dispenser_free(Dispenser* this) {
 	this->id = 0;
 	this->battery = 0;
 	this->filling = 0;
+	this->invalid_count = 0;
 	this->next_dispenser = NULL;
 	Product_destroy(this->product);
 	this->product = NULL;
@@ -266,4 +347,117 @@ void Dispenser_printf(Dispenser* this, char* arg) {
 	}
 	printf("---------------------------------------------------------------------------------\n");
 
+}
+
+static void Dispenser_send_ack(Dispenser* this) {
+	MessageToSend* message;
+	Dispenser_Id id;
+	message = Dispenser_get_acknowledge_message();
+	id = Dispenser_get_id(this);
+	DispenserManager_send_message_to_dispenser(id, message);
+}
+
+static void Dispenser_send_message(Dispenser* this) {
+	MessageToSend* message;
+	Dispenser_Id id;
+	message = Dispenser_get_message(this);
+	id = Dispenser_get_id(this);
+	DispenserManager_send_message_to_dispenser(id, message);
+}
+
+static void Dispenser_ask_new_message(Dispenser* this) {
+	MessageToSend* message;
+	Dispenser_Id id;
+	message = Dispenser_get_repeat_message();
+	id = Dispenser_get_id(this);
+	DispenserManager_send_message_to_dispenser(id, message);
+}
+
+static MessageToSend* Dispenser_get_repeat_message() {
+	MessageToSend* message;
+	message = MessageToSend_get_repeat_message();
+	return message;
+}
+
+
+static MessageToSend* Dispenser_get_acknowledge_message() {
+	MessageToSend* message;
+	message = MessageToSend_get_acknowledge_message();
+	return message;
+}
+
+static Invalid_count Dispenser_get_invalid_count(Dispenser* this) {
+	return this->invalid_count;
+}
+
+static void Dispenser_set_invalid_count(Dispenser* this, Invalid_count invalid_count) {
+	this->invalid_count = invalid_count;
+}
+
+static void Dispenser_reset_invalid_count(Dispenser* this) {
+	Dispenser_set_invalid_count(this, 0);
+}
+
+static void Dispenser_increment_invalid_count(Dispenser* this) {
+	Invalid_count invalid_count;
+	invalid_count = Dispenser_get_invalid_count(this);
+	invalid_count++;
+	Dispenser_set_invalid_count(this, invalid_count);
+}
+
+static void Dispenser_check_invalid_message_count(Dispenser* this) {
+	bool result;
+	result = Dispenser_has_reached_max_invalid_message(this);
+	if(result){
+		DispenserManager_compromised_dispenser_event(this);
+	} else {
+		DispenserManager_not_compromised_dispenser_event(this);
+	}
+}
+
+static bool Dispenser_has_reached_max_invalid_message(Dispenser* this) {
+	bool result;
+	result = Dispenser_get_invalid_count(this) < MAX_COUNT_INVALID_MESSAGE;
+	return result;
+}
+
+static void Dispenser_save_data(Dispenser* this, DispenserMqMsg message) {
+	Dispenser_set_battery(this, message.battery);
+	Dispenser_set_filling(this, message.filling);
+	DispenserManager_check_message(this);
+}
+
+static Lost_count Dispenser_get_lost_count(Dispenser* this) {
+	return this->lost_count;
+}
+
+static void Dispenser_set_lost_count(Dispenser* this, Lost_count lost_count) {
+	this->lost_count = lost_count;
+}
+
+static void Dispenser_reset_lost_count(Dispenser* this) {
+	Dispenser_set_lost_count(this, 0);
+}
+
+static void Dispenser_increment_lost_count(Dispenser* this) {
+	Lost_count lost_count;
+	lost_count = Dispenser_get_lost_count(this);
+	lost_count++;
+	Dispenser_set_lost_count(this, lost_count);
+}
+
+static void Dispenser_check_lost_message_count(Dispenser* this) {
+	bool result;
+	result = Dispenser_has_reached_max_lost_message(this);
+	if(result){
+		DispenserManager_lost_dispenser_event(this);
+	} else {
+		DispenserManager_not_lost_dispenser_event(this);
+	}
+}
+
+static bool Dispenser_has_reached_max_lost_message(Dispenser* this) {
+	bool result;
+	result = Dispenser_get_lost_count(this) < MAX_COUNT_LOST_MESSAGE;
+	return result;
 }
