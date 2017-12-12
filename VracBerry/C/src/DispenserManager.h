@@ -14,6 +14,8 @@
 
 #include "Dispenser.h"
 
+#define DEFAULT_PRODUCT_NAME "XXXXX"
+
 typedef struct Dispenser_list_t Dispenser_list;
 
 extern Dispenser* DispenserManager_get_list();
@@ -73,5 +75,10 @@ extern void DispenserManager_send_message_to_dispenser(Dispenser_Id, MessageToSe
 extern void DispenserManager_send_warning_broken_dispenser(Dispenser_Id);
 
 extern void DispenserManager_prepare_destroy_dispenser(Dispenser_Id);
+
+extern void DispenserManager_add_new_detected_dispenser(Dispenser_Id, Battery, Filling);
+
+extern void DispenserManager_ask_product_name(Dispenser*);
+
 
 #endif /* SRC_DISPENSERMANAGER_H_ */

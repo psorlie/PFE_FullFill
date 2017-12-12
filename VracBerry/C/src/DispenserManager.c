@@ -85,14 +85,23 @@ static void *DispenserManager_run() {
 	while(dispenser_list->first_dispenser != NULL) {
 		msg = DispenserManager_mq_receive();
 		this = DispenserManager_find_dispenser(msg.id);
-		Dispenser_run(this, msg);
+		if(this != NULL) {
+			Dispenser_run(this, msg);
+		} else {
+			this = DispenserManager_add_new_detected_dispenser(msg.id, msg.data_transmitted.battery_and_filling.battery, msg.data_transmitted.battery_and_filling.filling);
+			Application_add_new_dispenser(this);
+		}
 	}
 	return NULL;
 }
 
+void DispenserManager_ask_product_name(Dispenser* this) {
+	Application_add_new_dispenser(this);
+}
+
 static void DispenserManager_read_backup() {
 	//TODO function that read the backup file
-	DispenserManager_add_dispenser(0, "DEFAULT_PRODUCT", 100, 100);
+	DispenserManager_add_dispenser(0, DEFAULT_PRODUCT_NAME, 100, 100);
 }
 
 void DispenserManager_send_detailed_dispenser(Dispenser* this) {
@@ -129,6 +138,10 @@ void DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery batt
 	Dispenser* old_first_dispenser = dispenser_list->first_dispenser;
 	new_dispenser->next_dispenser = old_first_dispenser;
 	dispenser_list->first_dispenser = new_dispenser;
+}
+
+void DispenserManager_add_new_detected_dispenser(Dispenser_Id id, Battery battery, Filling filling) {
+	DispenserManager_add_dispenser(id, DEFAULT_PRODUCT_NAME, battery, filling);
 }
 
 Dispenser* DispenserManager_get_list(){
@@ -323,18 +336,18 @@ void DispenserManager_check_message(Dispenser* this) {
 	} else {
 		msg.event = E_NO_MESSAGE;
 	}
-	msg.battery = Dispenser_get_battery(this);
-	msg.filling = Dispenser_get_filling(this);
+	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
+	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
 	DispenserManager_mq_send(msg);
 }
 
 void DispenserManager_check_conformity_data(DispenserMqMsg message) {
 	DispenserMqMsg msg;
-	msg.filling = message.filling;
-	msg.battery = message.battery;
+	msg.data_transmitted.battery_and_filling.filling = message.data_transmitted.battery_and_filling.filling;
+	msg.data_transmitted.battery_and_filling.battery = message.data_transmitted.battery_and_filling.battery;
 	msg.id = message.id;
-	if(message.battery > 100 || message.filling > 100) {
+	if(message.data_transmitted.battery_and_filling.battery > 100 || message.data_transmitted.battery_and_filling.filling > 100) {
 		msg.event = E_INVALID_DATA;
 	} else {
 		msg.event = E_VALID_DATA;
@@ -344,8 +357,8 @@ void DispenserManager_check_conformity_data(DispenserMqMsg message) {
 
 void DispenserManager_compromised_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
-	msg.battery = Dispenser_get_battery(this);
-	msg.filling = Dispenser_get_filling(this);
+	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
+	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
 	msg.event = E_INF_CPT_INVALID_MESSAGE;
 	DispenserManager_mq_send(msg);
@@ -353,8 +366,8 @@ void DispenserManager_compromised_dispenser_event(Dispenser* this) {
 
 void DispenserManager_not_compromised_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
-	msg.battery = Dispenser_get_battery(this);
-	msg.filling = Dispenser_get_filling(this);
+	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
+	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
 	msg.event = E_MAX_CPT_INVALID_MESSAGE;
 	DispenserManager_mq_send(msg);
@@ -362,8 +375,8 @@ void DispenserManager_not_compromised_dispenser_event(Dispenser* this) {
 
 void DispenserManager_lost_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
-	msg.battery =  Dispenser_get_battery(this);
-	msg.filling = Dispenser_get_filling(this);
+	msg.data_transmitted.battery_and_filling.battery =  Dispenser_get_battery(this);
+	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
 	msg.event = E_SUP_CPT_TIME_SINCE_LAST_MESSAGE;
 	DispenserManager_mq_send(msg);
@@ -371,8 +384,8 @@ void DispenserManager_lost_dispenser_event(Dispenser* this) {
 
 void DispenserManager_not_lost_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
-	msg.battery =  Dispenser_get_battery(this);
-	msg.filling = Dispenser_get_filling(this);
+	msg.data_transmitted.battery_and_filling.battery =  Dispenser_get_battery(this);
+	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
 	msg.event = E_INF_CPT_TIME_SINCE_LAST_MESSAGE;
 	DispenserManager_mq_send(msg);
@@ -382,8 +395,8 @@ void DispenserManager_ask_detailed_dispenser(Dispenser_Id id) {
 	Dispenser* this;
 	this = DispenserManager_find_dispenser(id);
 	DispenserMqMsg msg;
-	msg.battery = Dispenser_get_battery(this);
-	msg.filling = Dispenser_get_filling(this);
+	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
+	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = id;
 	msg.event = E_ASK_DETAILED;
 	DispenserManager_mq_send(msg);
@@ -399,8 +412,8 @@ void DispenserManager_ask_all_update() {
 
 static void DispenserManager_ask_update(Dispenser* this) {
 	DispenserMqMsg message;
-	message.battery = Dispenser_get_battery(this);
-	message.filling = Dispenser_get_filling(this);
+	message.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
+	message.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	message.id = Dispenser_get_id(this);
 	message.event = E_ASK_UPDATE;
 	DispenserManager_mq_send(message);
@@ -409,8 +422,8 @@ static void DispenserManager_ask_update(Dispenser* this) {
 void DispenserManager_received_message(Dispenser_Id id, Battery battery, Filling filling) {
 	DispenserMqMsg message;
 	message.id = id;
-	message.battery = battery;
-	message.filling = filling;
+	message.data_transmitted.battery_and_filling.battery = battery;
+	message.data_transmitted.battery_and_filling.filling = filling;
 	message.event = E_RECEIVED_MESSAGE;
 	DispenserManager_mq_send(message);
 }
@@ -426,9 +439,17 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	DispenserMqMsg message;
 	message.id = id;
 	Dispenser* this = DispenserManager_find_dispenser(id);
-	message.battery = this->battery;
-	message.filling = this->filling;
+	message.data_transmitted.battery_and_filling.battery = this->battery;
+	message.data_transmitted.battery_and_filling.filling = this->filling;
 	message.event = E_DESTROY;
 	DispenserManager_mq_send(message);
 }
-
+ void DispenserManager_prepare_set_new_product_name(Dispenser_Id id, char* name) {
+	 DispenserMqMsg message;
+	 message.id = id;
+	 Dispenser* this = DispenserManager_find_dispenser(id);
+	 message.event = E_SET_NEW_PRODUCT_NAME;
+	 int size = strlen(name);
+	 snprintf(message.data_transmitted.product, size, "%s", name);
+	 DispenserManager_mq_send(message);
+ }

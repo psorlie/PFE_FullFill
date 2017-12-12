@@ -13,14 +13,8 @@
 #include "DispenserManager.h"
 
 static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
-		[S_INIT][E_ALREADY_KNOWN] =
-		{S_WAIT_MESSAGE, A_SEND_INFOS},
-		[S_INIT][E_UNKNOWN] =
-		{S_RUN, A_ALREADY_KNOWN},
-
-		[S_WAIT_MESSAGE][E_RECEIVED_MESSAGE] =
-		{S_RUN, A_INIT_COUNTERS},
-
+		[S_RUN][E_SET_NEW_PRODUCT_NAME] =
+		{S_RUN, A_SET_NEW_PRODUCT_NAME},
 		[S_RUN][E_RECEIVED_MESSAGE] =
 		{S_CHECK_DATA, A_RECEIVED_MESSAGE},
 		[S_RUN][E_TIMER] =
@@ -116,12 +110,9 @@ void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
 
 static void Dispenser_performAction(Dispenser* this, DispenserAction action, DispenserMqMsg message) {
 	switch(action) {
-	//TODO case A_SEND_INFOS:
-	//TODO break;
-	//TODO case A_ALREADY_KNOWN:
-	//TODO break;
-	//TODO case A_INIT_COUNTERS:
-	//TODO break;
+	case A_SET_NEW_PRODUCT_NAME:
+		Dispenser_set_product(this, message.data_transmitted.product);
+		break;
 	case A_RECEIVED_MESSAGE:
 		Dispenser_reset_lost_count(this);
 		DispenserManager_check_conformity_data(message);
@@ -175,7 +166,6 @@ static void Dispenser_performAction(Dispenser* this, DispenserAction action, Dis
 	}
 }
 
-
 Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	Dispenser * this;
 	this = (Dispenser *) malloc (sizeof(Dispenser));
@@ -183,6 +173,28 @@ Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Fil
 	this->filling = 0;
 	this->id = 0;
 	this->invalid_count = 0;
+	this->lost_count = 0;
+	this->last_wash_date = NULL;
+	this->product = NULL;
+	this->next_dispenser = NULL;
+	this->message = NULL;
+	this->state = S_RUN;
+	Dispenser_set_id(this, id);
+	Dispenser_set_filling(this, filling);
+	Dispenser_set_battery(this, battery);
+	Dispenser_set_product(this, product);
+	Dispenser_set_current_date(this);
+	return this;
+}
+
+Dispenser* Dispenser_detected(Dispenser_Id id, Battery battery, Filling filling) {
+	Dispenser * this;
+	this = (Dispenser *) malloc (sizeof(Dispenser));
+	this->battery = 0;
+	this->filling = 0;
+	this->id = 0;
+	this->invalid_count = 0;
+	this->lost_count = 0;
 	this->last_wash_date = NULL;
 	this->product = NULL;
 	this->next_dispenser = NULL;
@@ -191,7 +203,6 @@ Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Fil
 	Dispenser_set_id(this, id);
 	Dispenser_set_filling(this, filling);
 	Dispenser_set_battery(this, battery);
-	Dispenser_set_product(this, product);
 	Dispenser_set_current_date(this);
 	return this;
 }
@@ -207,6 +218,7 @@ static void Dispenser_free(Dispenser* this) {
 	this->battery = 0;
 	this->filling = 0;
 	this->invalid_count = 0;
+	this->lost_count = 0;
 	this->next_dispenser = NULL;
 	Product_destroy(this->product);
 	this->product = NULL;
@@ -422,8 +434,8 @@ static bool Dispenser_has_reached_max_invalid_message(Dispenser* this) {
 }
 
 static void Dispenser_save_data(Dispenser* this, DispenserMqMsg message) {
-	Dispenser_set_battery(this, message.battery);
-	Dispenser_set_filling(this, message.filling);
+	Dispenser_set_battery(this, message.data_transmitted.battery_and_filling.battery);
+	Dispenser_set_filling(this, message.data_transmitted.battery_and_filling.filling);
 	DispenserManager_check_message(this);
 }
 

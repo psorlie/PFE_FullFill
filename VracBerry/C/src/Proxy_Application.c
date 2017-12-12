@@ -144,8 +144,14 @@ void Application_detailed_dispenser(Dispenser* this) {
 	Postman_send(prepare_string);
 }
 
-extern void Application_warn_dispenser_is_broken(Dispenser_Id) {
+void Application_warn_dispenser_is_broken(Dispenser_Id) {
+	//TODO
 	perror("[Application-Proxy] - On prévient l'application que le dispenser est cassé");
+}
+
+void Application_add_new_dispenser(Dispenser* this) {
+	//TODO
+	perror("[Application-Proxy] - Rajouter un bouton sur l'IHM + demander le nom du produit");
 }
 
 

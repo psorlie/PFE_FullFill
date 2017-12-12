@@ -29,9 +29,7 @@ typedef uint8_t Invalid_count;
 typedef uint8_t Lost_count;
 
 typedef enum DispenserState_t {
-	S_INIT = 0,
-	S_NOP,
-	S_WAIT_MESSAGE,
+	S_NOP = 0,
 	S_RUN,
 	S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE,
 	S_LOST,
@@ -44,8 +42,7 @@ typedef enum DispenserState_t {
 } DispenserState;
 
 typedef enum {
-	E_UNKNOWN = 0, // TODO
-	E_ALREADY_KNOWN, // TODO
+	E_SET_NEW_PRODUCT_NAME = 0,
 	E_RECEIVED_MESSAGE,
 	E_TIMER, // TODO
 	E_INF_CPT_TIME_SINCE_LAST_MESSAGE,
@@ -63,9 +60,7 @@ typedef enum {
 } DispenserEvent;
 
 typedef enum DispenserAction {
-	A_SEND_INFOS = 0,
-	A_ALREADY_KNOWN,
-	A_INIT_COUNTERS,
+	A_SET_NEW_PRODUCT_NAME = 0,
 	A_RECEIVED_MESSAGE,
 	A_INC_CPT_TIME_SINCE_LAST_MESSAGE,
 	A_RESET_TIMER,
@@ -88,14 +83,22 @@ typedef struct DispenserTransition_t {
 } DispenserTransition;
 
 typedef struct {
-	DispenserEvent event;
-	Dispenser_Id id;
 	Battery battery;
 	Filling filling;
+} BatteryAndFilling;
+
+typedef union {
+	BatteryAndFilling battery_and_filling;
+	char product [PRODUCT_SIZE];
+} DataTransmitted;
+
+typedef struct {
+	DispenserEvent event;
+	Dispenser_Id id;
+	DataTransmitted data_transmitted;
 } DispenserMqMsg;
 
-typedef union
-{
+typedef union {
 	char buffer[MQ_DISPENSER_MANAGER_MSG_SIZE];
 	DispenserMqMsg data;
 } DispenserMqMsgAdapter;
@@ -150,6 +153,8 @@ extern MessageToSend* Dispenser_get_message(Dispenser*);
 extern void Dispenser_printf(Dispenser*, char*);
 
 extern void Dispenser_run(Dispenser*, DispenserMqMsg);
+
+extern Dispenser* Dispenser_detected(Dispenser_Id, Battery, Filling);
 
 
 #endif /* SRC_DISPENSER_H_ */
