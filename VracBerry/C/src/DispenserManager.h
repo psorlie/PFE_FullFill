@@ -8,13 +8,14 @@
 #ifndef SRC_DISPENSERMANAGER_H_
 #define SRC_DISPENSERMANAGER_H_
 
+#define BACKUP_FILE "/jesaispas/backup.txt"
+
 #define MQ_DISPENSER_MANAGER_NAME "/mq_dispenser_manager"
 #define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
 #define MQ_DISPENSER_MANAGER_MSG_COUNT (10)
 
+#include "Network_Configuration.h"
 #include "Dispenser.h"
-
-#define DEFAULT_PRODUCT_NAME "XXXXX"
 
 typedef struct Dispenser_list_t Dispenser_list;
 
@@ -22,7 +23,7 @@ extern Dispenser* DispenserManager_get_list();
 
 extern void DispenserManager_init();
 
-extern void DispenserManager_add_dispenser(Dispenser_Id, char*, Battery, Filling);
+extern Dispenser* DispenserManager_add_dispenser(Dispenser_Id, char*, Battery, Filling);
 
 extern void DispenserManager_free_dispenser(Dispenser_Id);
 
@@ -74,11 +75,26 @@ extern void DispenserManager_send_message_to_dispenser(Dispenser_Id, MessageToSe
 
 extern void DispenserManager_send_warning_broken_dispenser(Dispenser_Id);
 
+extern void DispenserManager_send_warning_lost_dispenser(Dispenser_Id);
+
 extern void DispenserManager_prepare_destroy_dispenser(Dispenser_Id);
 
-extern void DispenserManager_add_new_detected_dispenser(Dispenser_Id, Battery, Filling);
+extern Dispenser* DispenserManager_add_new_detected_dispenser(Dispenser_Id, Battery, Filling);
 
 extern void DispenserManager_ask_product_name(Dispenser*);
+
+extern void DispenserManager_tell_dispenser_broken(Dispenser_Id);
+
+extern void DispenserManager_tell_dispenser_repeat(Dispenser_Id);
+
+extern void DispenserManager_save_in_backup(Dispenser*);
+
+extern void DispenserManager_check_dispenser_is_dirty(int);
+
+extern void DispenserManager_end_of_the_day();
+
+extern void DispenserManager_morning();
+
 
 
 #endif /* SRC_DISPENSERMANAGER_H_ */

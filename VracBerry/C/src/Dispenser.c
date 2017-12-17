@@ -17,8 +17,8 @@ static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		{S_RUN, A_SET_NEW_PRODUCT_NAME},
 		[S_RUN][E_RECEIVED_MESSAGE] =
 		{S_CHECK_DATA, A_RECEIVED_MESSAGE},
-		[S_RUN][E_TIMER] =
-		{S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE, A_INC_CPT_TIME_SINCE_LAST_MESSAGE},
+		[S_RUN][E_END_OF_THE_DAY] =
+		{S_CHECK_HAS_EMITTED, A_END_OF_THE_DAY},
 		[S_RUN][E_DESTROY] =
 		{S_DEATH, A_DESTROY},
 		[S_RUN][E_ASK_UPDATE] =
@@ -27,15 +27,27 @@ static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		{S_RUN, A_SEND_DETAILED},
 
 
-		[S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE][E_INF_CPT_TIME_SINCE_LAST_MESSAGE] =
-		{S_RUN, A_RESET_TIMER},
-		[S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE][E_SUP_CPT_TIME_SINCE_LAST_MESSAGE] =
-		{S_LOST, A_SUP_CPT_TIME_SINCE_LAST_MESSAGE},
+		[S_CHECK_HAS_EMITTED][E_HAS_EMITTED] =
+		{S_SLEEP, A_SAVE_BACKUP},
+		[S_CHECK_HAS_EMITTED][E_HAS_NOT_EMITTED] =
+		{S_LOST, A_SAVE_BACKUP},
 
 		[S_LOST][E_RECEIVED_MESSAGE] =
-		{S_CHECK_DATA, A_RESET_TIMER},
+		{S_CHECK_DATA, A_RECEIVED_MESSAGE},
 		[S_LOST][E_DESTROY] =
 		{S_DEATH, A_DESTROY},
+		[S_LOST][E_ASK_UPDATE] =
+		{S_LOST, A_LOST_ANSWER},
+		[S_LOST][E_ASK_DETAILED] =
+		{S_LOST, A_LOST_ANSWER},
+
+
+		[S_SLEEP][E_MORNING] =
+		{S_RUN, A_MORNING},
+		[S_SLEEP][E_ASK_UPDATE] =
+		{S_SLEEP, A_NOP},
+		[S_SLEEP][E_ASK_DETAILED] =
+		{S_SLEEP, A_NOP},
 
 		[S_CHECK_DATA][E_VALID_DATA] =
 		{S_CHECK_MESSAGE, A_VALID_DATA},
@@ -43,11 +55,16 @@ static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		{S_CHECK_CPT_INVALID_MESSAGE, A_INVALID_DATA},
 
 		[S_CHECK_CPT_INVALID_MESSAGE][E_INF_CPT_INVALID_MESSAGE] =
-		{S_LOST, A_ASK_NEW_MESSAGE},
+		{S_RUN, A_ASK_NEW_MESSAGE},
 		[S_CHECK_CPT_INVALID_MESSAGE][E_MAX_CPT_INVALID_MESSAGE] =
-		{S_DEFICIENT, A_MAX_CPT_INVALID_MESSAGE},
+		{S_BROKEN, A_MAX_CPT_INVALID_MESSAGE},
 
-		[S_DEFICIENT][E_DESTROY] = {S_DEATH, A_DESTROY},
+		[S_BROKEN][E_DESTROY] =
+		{S_DEATH, A_DESTROY},
+		[S_BROKEN][E_ASK_UPDATE] =
+		{S_BROKEN, A_BROKEN_ANSWER},
+		[S_BROKEN][E_ASK_DETAILED] =
+		{S_BROKEN, A_BROKEN_ANSWER},
 
 		[S_CHECK_MESSAGE][E_NO_MESSAGE] =
 		{S_RUN, A_NO_MESSAGE_AND_UPDATE},
@@ -83,18 +100,15 @@ static void Dispenser_save_data(Dispenser*, DispenserMqMsg);
 
 static void Dispenser_check_invalid_message_count(Dispenser*);
 
-static Lost_count Dispenser_get_lost_count(Dispenser*);
+static void Dispenser_check_has_emitted(Dispenser*);
 
-static void Dispenser_set_lost_count(Dispenser*, Lost_count);
+static Is_Lost Dispenser_is_lost(Dispenser*);
 
-static void Dispenser_reset_lost_count(Dispenser*);
+static void Dispenser_reset_lost(Dispenser*);
 
-static void Dispenser_increment_lost_count(Dispenser*);
+static void Dispenser_check_is_dirty(Dispenser*);
 
-static void Dispenser_check_lost_message_count(Dispenser*);
-
-static bool Dispenser_has_reached_max_lost_message(Dispenser*);
-
+static void Dispenser_has_received_a_message(Dispenser*);
 
 
 void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
@@ -112,20 +126,27 @@ static void Dispenser_performAction(Dispenser* this, DispenserAction action, Dis
 	switch(action) {
 	case A_SET_NEW_PRODUCT_NAME:
 		Dispenser_set_product(this, message.data_transmitted.product);
+		DispenserManager_send_update(this);
 		break;
 	case A_RECEIVED_MESSAGE:
-		Dispenser_reset_lost_count(this);
+		Dispenser_has_received_a_message(this);
 		DispenserManager_check_conformity_data(message);
 		break;
-	case A_INC_CPT_TIME_SINCE_LAST_MESSAGE:
-		Dispenser_increment_lost_count(this);
-		Dispenser_check_lost_message_count(this);
+	case A_BROKEN_ANSWER:
+		DispenserManager_send_warning_broken_dispenser(this->id);
 		break;
-	//TODO case A_RESET_TIMER:
-	//TODO break;
-	case A_SUP_CPT_TIME_SINCE_LAST_MESSAGE:
-		Dispenser_set_battery(this, 0);
-		DispenserManager_send_update(this);
+	case A_MORNING:
+		Dispenser_check_is_dirty(this);
+		Dispenser_reset_lost(this);
+		break;
+	case A_LOST_ANSWER:
+		DispenserManager_send_warning_lost_dispenser(this->id);
+		break;
+	case A_SAVE_BACKUP:
+		DispenserManager_save_in_backup(this);
+		break;
+	case A_END_OF_THE_DAY:
+		Dispenser_check_has_emitted(this);
 		break;
 	case A_INVALID_DATA:
 		Dispenser_increment_invalid_count(this);
@@ -133,11 +154,13 @@ static void Dispenser_performAction(Dispenser* this, DispenserAction action, Dis
 		Dispenser_check_invalid_message_count(this);
 		break;
 	case A_MAX_CPT_INVALID_MESSAGE:
+		DispenserManager_tell_dispenser_broken(this->id);
 		DispenserManager_send_warning_broken_dispenser(this->id);
-		DispenserManager_prepare_destroy_dispenser(this->id);
+		DispenserManager_save_in_backup(this);
 		break;
-	//TODO case A_ASK_NEW_MESSAGE:
-	//TODO break;
+	case A_ASK_NEW_MESSAGE:
+		DispenserManager_tell_dispenser_repeat(this->id);
+		break;
 	case A_VALID_DATA:
 		Dispenser_reset_invalid_count(this);
 		Dispenser_save_data(this, message);
@@ -147,6 +170,7 @@ static void Dispenser_performAction(Dispenser* this, DispenserAction action, Dis
 		DispenserManager_free_dispenser(this->id);
 		break;
 	case A_SEND_UPDATE:
+		Dispenser_check_is_dirty(this);
 		DispenserManager_send_update(this);
 		break;
 	case A_SEND_DETAILED:
@@ -173,7 +197,7 @@ Dispenser* Dispenser_create(Dispenser_Id id, char* product, Battery battery, Fil
 	this->filling = 0;
 	this->id = 0;
 	this->invalid_count = 0;
-	this->lost_count = 0;
+	this->is_lost = true;
 	this->last_wash_date = NULL;
 	this->product = NULL;
 	this->next_dispenser = NULL;
@@ -194,12 +218,12 @@ Dispenser* Dispenser_detected(Dispenser_Id id, Battery battery, Filling filling)
 	this->filling = 0;
 	this->id = 0;
 	this->invalid_count = 0;
-	this->lost_count = 0;
+	this->is_lost = true;
 	this->last_wash_date = NULL;
 	this->product = NULL;
 	this->next_dispenser = NULL;
 	this->message = NULL;
-	this->state = S_INIT;
+	this->state = S_RUN;
 	Dispenser_set_id(this, id);
 	Dispenser_set_filling(this, filling);
 	Dispenser_set_battery(this, battery);
@@ -218,7 +242,7 @@ static void Dispenser_free(Dispenser* this) {
 	this->battery = 0;
 	this->filling = 0;
 	this->invalid_count = 0;
-	this->lost_count = 0;
+	this->is_lost = false;
 	this->next_dispenser = NULL;
 	Product_destroy(this->product);
 	this->product = NULL;
@@ -338,6 +362,13 @@ void Dispenser_set_current_date(Dispenser* this) {
 	this->last_wash_date = Date_set_current_date();
 }
 
+void Dispenser_set_specified_date(Dispenser* this, int day, int year) {
+	if(this->last_wash_date != NULL) {
+		Date_destroy(this->last_wash_date);
+	}
+	this->last_wash_date = Date_set_specified_date(day, year);
+}
+
 bool Dispenser_is_last_dispenser(Dispenser* this) {
 	assert(this != NULL);
 	return (this->next_dispenser == NULL);
@@ -439,37 +470,37 @@ static void Dispenser_save_data(Dispenser* this, DispenserMqMsg message) {
 	DispenserManager_check_message(this);
 }
 
-static Lost_count Dispenser_get_lost_count(Dispenser* this) {
-	return this->lost_count;
+static Is_Lost Dispenser_is_lost(Dispenser* this) {
+	return this->is_lost;
 }
 
-static void Dispenser_set_lost_count(Dispenser* this, Lost_count lost_count) {
-	this->lost_count = lost_count;
+static void Dispenser_reset_lost(Dispenser* this) {
+	this->is_lost = true;
 }
 
-static void Dispenser_reset_lost_count(Dispenser* this) {
-	Dispenser_set_lost_count(this, 0);
+static void Dispenser_has_received_a_message(Dispenser* this) {
+	this->is_lost = false;
 }
 
-static void Dispenser_increment_lost_count(Dispenser* this) {
-	Lost_count lost_count;
-	lost_count = Dispenser_get_lost_count(this);
-	lost_count++;
-	Dispenser_set_lost_count(this, lost_count);
-}
-
-static void Dispenser_check_lost_message_count(Dispenser* this) {
-	bool result;
-	result = Dispenser_has_reached_max_lost_message(this);
-	if(result){
+static void Dispenser_check_has_emitted(Dispenser* this) {
+	bool is_lost = (bool)Dispenser_is_lost(this);
+	if(is_lost) {
 		DispenserManager_lost_dispenser_event(this);
 	} else {
 		DispenserManager_not_lost_dispenser_event(this);
 	}
 }
 
-static bool Dispenser_has_reached_max_lost_message(Dispenser* this) {
-	bool result;
-	result = Dispenser_get_lost_count(this) < MAX_COUNT_LOST_MESSAGE;
-	return result;
+static void Dispenser_check_is_dirty(Dispenser* this) {
+	time_t rawtime;
+	struct tm * timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	int day_diff = timeinfo->tm_yday - this->last_wash_date->current_day;
+	int year_diff = timeinfo->tm_year - this->last_wash_date->year;
+
+	int total_day_diff = year_diff*365 + day_diff;
+
+	DispenserManager_check_dispenser_is_dirty(total_day_diff);
 }
