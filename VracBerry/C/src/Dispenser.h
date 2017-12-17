@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <time.h>
 
 #include "Date.h"
@@ -26,16 +27,17 @@ typedef uint8_t Battery;
 typedef uint8_t Filling;
 typedef uint8_t Dispenser_Id;
 typedef uint8_t Invalid_count;
-typedef uint8_t Lost_count;
+typedef bool Is_Lost;
 
 typedef enum DispenserState_t {
 	S_NOP = 0,
 	S_RUN,
-	S_CHECK_CPT_TIME_SINCE_LAST_MESSAGE,
 	S_LOST,
 	S_CHECK_DATA,
+	S_CHECK_HAS_EMITTED,
 	S_CHECK_CPT_INVALID_MESSAGE,
-	S_DEFICIENT,
+	S_SLEEP,
+	S_BROKEN,
 	S_CHECK_MESSAGE,
 	S_DEATH,
 	S_NBR_STATE
@@ -44,9 +46,10 @@ typedef enum DispenserState_t {
 typedef enum {
 	E_SET_NEW_PRODUCT_NAME = 0,
 	E_RECEIVED_MESSAGE,
-	E_TIMER, // TODO
-	E_INF_CPT_TIME_SINCE_LAST_MESSAGE,
-	E_SUP_CPT_TIME_SINCE_LAST_MESSAGE,
+	E_END_OF_THE_DAY,
+	E_HAS_EMITTED,
+	E_HAS_NOT_EMITTED,
+	E_MORNING,
 	E_INVALID_DATA,
 	E_MAX_CPT_INVALID_MESSAGE,
 	E_INF_CPT_INVALID_MESSAGE,
@@ -55,16 +58,19 @@ typedef enum {
 	E_ASK_DETAILED,
 	E_NO_MESSAGE,
 	E_MESSAGE,
-	E_DESTROY, // TODO
+	E_DESTROY,
 	E_NBR_EVENT
 } DispenserEvent;
 
 typedef enum DispenserAction {
-	A_SET_NEW_PRODUCT_NAME = 0,
+	A_NOP = 0,
+	A_MORNING,
+	A_SET_NEW_PRODUCT_NAME,
 	A_RECEIVED_MESSAGE,
-	A_INC_CPT_TIME_SINCE_LAST_MESSAGE,
-	A_RESET_TIMER,
-	A_SUP_CPT_TIME_SINCE_LAST_MESSAGE,
+	A_LOST_ANSWER,
+	A_BROKEN_ANSWER,
+	A_END_OF_THE_DAY,
+	A_SAVE_BACKUP,
 	A_INVALID_DATA,
 	A_MAX_CPT_INVALID_MESSAGE,
 	A_ASK_NEW_MESSAGE,
@@ -111,7 +117,7 @@ struct Dispenser_t {
 	Battery battery;
 	DispenserState state;
 	Invalid_count invalid_count;
-	Lost_count lost_count;
+	Is_Lost is_lost;
 	Product* product;
 	Date* last_wash_date;
 	Dispenser* next_dispenser;
@@ -155,6 +161,8 @@ extern void Dispenser_printf(Dispenser*, char*);
 extern void Dispenser_run(Dispenser*, DispenserMqMsg);
 
 extern Dispenser* Dispenser_detected(Dispenser_Id, Battery, Filling);
+
+extern void Dispenser_set_specified_date(Dispenser*, int, int);
 
 
 #endif /* SRC_DISPENSER_H_ */

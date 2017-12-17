@@ -10,6 +10,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 #include "DispenserManager.h"
 #include "Application.h"
 #include "Postman.h"

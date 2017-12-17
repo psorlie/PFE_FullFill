@@ -11,7 +11,6 @@
 #include <stdarg.h>
 
 #include "Application.h"
-#include "DispenserManager.h"
 #include "Postman.h"
 
 #define MAXIMUM_MESG_SIZE (1024)
@@ -144,16 +143,37 @@ void Application_detailed_dispenser(Dispenser* this) {
 	Postman_send(prepare_string);
 }
 
-void Application_warn_dispenser_is_broken(Dispenser_Id) {
+void Application_warn_dispenser_is_broken(Dispenser_Id id) {
 	//TODO
-	perror("[Application-Proxy] - On prévient l'application que le dispenser est cassé");
+	perror("[Application-Proxy] - On prévient l'application que le dispenser est cassé\n");
 }
 
 void Application_add_new_dispenser(Dispenser* this) {
 	//TODO
-	perror("[Application-Proxy] - Rajouter un bouton sur l'IHM + demander le nom du produit");
+	perror("[Application-Proxy] - Rajouter un bouton sur l'IHM + demander le nom du produit\n");
 }
 
+void Application_warn_dispenser_is_lost(Dispenser_Id id) {
+	//TODO
+	perror("[Application-Proxy] - On prévient l'application que le dispenser est perdu\n");
+}
+
+void Application_warn_configuration_accepted() {
+	//TODO
+	perror("[Application-Proxy] - On prévient l'application que la configuration est acceptée\n");
+}
+
+void Application_warn_configuration_refused() {
+	//TODO
+	perror("[Application-Proxy] - On prévient l'application que la configuration est refusée\n");
+}
+
+void Application_send_current_configuration(uint32_t wake_up_time_since_midnight_in_minutes,\
+		uint32_t sleep_time_since_midnight_in_minutes,\
+		uint16_t time_between_emission_in_minutes, uint16_t time_between_cleaning_in_days) {
+	//TODO
+		perror("[Application-Proxy] - On donne la configuration pour l'envoyer \n");
+}
 
 
 // extern void Application_set_network_configuration(Network*);

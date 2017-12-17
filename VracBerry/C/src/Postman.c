@@ -63,6 +63,7 @@ static PostmanMqMsg Postman_mq_receive() {
 		check = mq_timedreceive(mail_queue, msg_adapter.buffer, MQ_POSTMAN_MSG_SIZE, 0, &default_mq_reading_timeout);
 		if(check == -1 || check == ETIMEDOUT) {
 			perror("[Postman] - MQ is empty\n");
+			strcpy(msg_adapter.buffer,"\0\0");
 		}
 	}
 	check = mq_close(mail_queue);

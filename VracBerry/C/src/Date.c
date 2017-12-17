@@ -33,6 +33,16 @@ Date* Date_set_current_date() {
 	return this;
 }
 
+Date* Date_set_specified_date(int day, int year) {
+	Date* this;
+	this = (Date *) malloc (sizeof(Date));
+
+	this->current_day = day;
+	this->year = year;
+
+	return this;
+}
+
 int Date_get_year(Date* this) {
 	assert(this != NULL);
 	int ret = this->year;

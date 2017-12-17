@@ -38,7 +38,7 @@ static void* DispenserManager_run();
 
 static void DispenserManager_read_backup();
 
-//TODO static bool DispenserManager_exist(Dispenser_Id);
+static void DispenserManager_add_dispenser_from_backup(Dispenser_Id, char*, Battery, Filling, int, int, int);
 
 static Dispenser_list* DispenserManager_initialisation() {
 	assert(dispenser_list == NULL);
@@ -100,35 +100,41 @@ void DispenserManager_ask_product_name(Dispenser* this) {
 }
 
 static void DispenserManager_read_backup() {
-	//TODO function that read the backup file
-	DispenserManager_add_dispenser(0, DEFAULT_PRODUCT_NAME, 100, 100);
+	//TODO untested
+	int state;
+	uint8_t id, battery, filling;
+	int day, year;
+	char product [PRODUCT_SIZE];
+	FILE* file_identifier;
+	fpos_t pos;
+	int pos_init = 0;
+	bool is_not_over = true;
+	while(is_not_over) {
+		if((file_identifier = fopen("backup.txt", "rw+")) == NULL) {
+			DispenserManager_add_dispenser(0, DEFAULT_PRODUCT_NAME, 100, 100);
+		} else {
+			if(pos_init) {
+				fsetpos(file_identifier, &pos);
+			}
+			while(!feof(file_identifier)) {
+				if (fscanf(file_identifier, "id=%c battery=%c filling=%c product=%s day=%d year=%d state=%d", &id, &battery, &filling, product, &day, &year, &state)) {
+					is_not_over = false;
+				} else {
+					DispenserManager_add_dispenser_from_backup(id, product, battery, filling, day, year, state);
+					fgetpos(file_identifier, &pos);
+					pos_init = 1;
+				}
+			}
+		}
+		fclose(file_identifier);
+	}
 }
 
 void DispenserManager_send_detailed_dispenser(Dispenser* this) {
 	Application_detailed_dispenser(this);
 }
-//TODO
-/*static bool DispenserManager_exist(Dispenser_Id id) {
-	assert(dispenser_list != NULL);
-	bool has_been_found = false;
 
-	Dispenser* current_dispenser = dispenser_list->first_dispenser;
-	if(current_dispenser->id != id){
-		has_been_found = true;
-	}
-		while (current_dispenser->next_dispenser != NULL && !has_been_found) {
-
-			if(current_dispenser->next_dispenser->id == id){
-				has_been_found = true;
-			} else {
-				current_dispenser = current_dispenser->next_dispenser;
-			}
-		}
-	return has_been_found;
-
-}*/
-
-void DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
+Dispenser* DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {
 		printf("initialisation\n");
 		dispenser_list = DispenserManager_initialisation();
@@ -138,10 +144,19 @@ void DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery batt
 	Dispenser* old_first_dispenser = dispenser_list->first_dispenser;
 	new_dispenser->next_dispenser = old_first_dispenser;
 	dispenser_list->first_dispenser = new_dispenser;
+	return new_dispenser;
 }
 
-void DispenserManager_add_new_detected_dispenser(Dispenser_Id id, Battery battery, Filling filling) {
-	DispenserManager_add_dispenser(id, DEFAULT_PRODUCT_NAME, battery, filling);
+static void DispenserManager_add_dispenser_from_backup(Dispenser_Id id, char* product, Battery battery, Filling filling, int day, int year, int state) {
+	Dispenser* this = DispenserManager_add_dispenser(id, product, battery, filling);
+	Dispenser_set_specified_date(this, day, year);
+	this->state = (DispenserState)state;
+}
+
+Dispenser* DispenserManager_add_new_detected_dispenser(Dispenser_Id id, Battery battery, Filling filling) {
+	Dispenser* this;
+	this = DispenserManager_add_dispenser(id, DEFAULT_PRODUCT_NAME, battery, filling);
+	return this;
 }
 
 Dispenser* DispenserManager_get_list(){
@@ -378,7 +393,7 @@ void DispenserManager_lost_dispenser_event(Dispenser* this) {
 	msg.data_transmitted.battery_and_filling.battery =  Dispenser_get_battery(this);
 	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
-	msg.event = E_SUP_CPT_TIME_SINCE_LAST_MESSAGE;
+	msg.event = E_HAS_NOT_EMITTED;
 	DispenserManager_mq_send(msg);
 }
 
@@ -387,7 +402,7 @@ void DispenserManager_not_lost_dispenser_event(Dispenser* this) {
 	msg.data_transmitted.battery_and_filling.battery =  Dispenser_get_battery(this);
 	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
-	msg.event = E_INF_CPT_TIME_SINCE_LAST_MESSAGE;
+	msg.event = E_HAS_EMITTED;
 	DispenserManager_mq_send(msg);
 }
 
@@ -435,6 +450,11 @@ void DispenserManager_send_message_to_dispenser(Dispenser_Id id, MessageToSend* 
 void DispenserManager_send_warning_broken_dispenser(Dispenser_Id id) {
 	Application_warn_dispenser_is_broken(id);
 }
+
+void DispenserManager_send_warning_lost_dispenser(Dispenser_Id id) {
+	Application_warn_dispenser_is_lost(id);
+}
+
 void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	DispenserMqMsg message;
 	message.id = id;
@@ -447,9 +467,49 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
  void DispenserManager_prepare_set_new_product_name(Dispenser_Id id, char* name) {
 	 DispenserMqMsg message;
 	 message.id = id;
-	 Dispenser* this = DispenserManager_find_dispenser(id);
 	 message.event = E_SET_NEW_PRODUCT_NAME;
 	 int size = strlen(name);
 	 snprintf(message.data_transmitted.product, size, "%s", name);
 	 DispenserManager_mq_send(message);
  }
+
+ void DispenserManager_tell_dispenser_broken(Dispenser_Id id) {
+	 Translator_send_message((uint8_t)id, PRODUCT_BROKEN);
+ }
+
+ void DispenserManager_tell_dispenser_repeat(Dispenser_Id id) {
+	 Translator_send_message((uint8_t)id, PRODUCT_REPEAT);
+ }
+
+ void DispenserManager_end_of_the_day() {
+	 Dispenser* this = dispenser_list->first_dispenser;
+	 while(this != NULL) {
+		 DispenserMqMsg message;
+		 message.id = this->id;
+		 message.event = E_END_OF_THE_DAY;
+		 DispenserManager_mq_send(message);
+		 this = this->next_dispenser;
+	 }
+ }
+
+ void DispenserManager_morning() {
+	 Dispenser* this = dispenser_list->first_dispenser;
+	 while(this != NULL) {
+		 DispenserMqMsg message;
+		 message.id = this->id;
+		 message.event = E_MORNING;
+		 DispenserManager_mq_send(message);
+		 this = this->next_dispenser;
+	 }
+ }
+
+void DispenserManager_save_in_backup(Dispenser* this) {
+	//TODO
+	perror("[DispenserManager] - No backup saving function\n");
+}
+
+void DispenserManager_check_dispenser_is_dirty(int total_day_diff) {
+	//TODO
+	perror("[DispenserManager] - Still not calculating if a dispenser is dirty\n");
+}
+
