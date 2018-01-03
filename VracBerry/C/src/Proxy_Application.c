@@ -5,6 +5,8 @@
  *      Author: sorlie
  */
 
+//TODO : utilisation de CJSON + création de Proxy_send_...() pour chaque envoi différent + appel de Postman_send()
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

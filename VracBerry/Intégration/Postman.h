@@ -17,8 +17,8 @@
 
 #define HOST 			"localhost" 	// IP address of the broker
 #define PORT 			1883 			// MQTT port of the broker
-#define KEEPALIVE 		60 				// Maximum connection time
-#define CLEAN_SESSION 	TRUE			// FALSE -> keep topic subscriptions after disconnect ; 	TRUE -> don't keep subscriptions
+#define KEEP_ALIVE 		60 				// Maximum connection time
+#define CLEAN_SESSION 	true			// FALSE -> keep topic subscriptions after disconnect ; 	TRUE -> don't keep subscriptions
 
 
 extern void Postman_init();
