@@ -52,30 +52,30 @@ static Dispenser_list* DispenserManager_initialisation() {
 
 void DispenserManager_init() {
 	struct mq_attr mail_queue_attributes;
-		int check;
-		mqd_t mail_queue;
-		mail_queue_attributes.mq_maxmsg = MQ_DISPENSER_MANAGER_MSG_COUNT;
-		mail_queue_attributes.mq_msgsize = MQ_DISPENSER_MANAGER_MSG_SIZE;
-		mail_queue_attributes.mq_flags = 0;
+	int check;
+	mqd_t mail_queue;
+	mail_queue_attributes.mq_maxmsg = MQ_DISPENSER_MANAGER_MSG_COUNT;
+	mail_queue_attributes.mq_msgsize = MQ_DISPENSER_MANAGER_MSG_SIZE;
+	mail_queue_attributes.mq_flags = 0;
 
-		check = mq_unlink(MQ_DISPENSER_MANAGER_NAME);
-		if(check != 0) {
-			perror("[Postman] - MQ already exist ?\n");
-		}
+	check = mq_unlink(MQ_DISPENSER_MANAGER_NAME);
+	if(check != 0) {
+		perror("[Postman] - MQ already exist ?\n");
+	}
 
-		mail_queue = mq_open(MQ_DISPENSER_MANAGER_NAME, O_CREAT, 0777, &mail_queue_attributes);
-		if (mail_queue <= -1) {
-			perror("[Postman] - Couldn\' open the MQ during init\n");
-		}
+	mail_queue = mq_open(MQ_DISPENSER_MANAGER_NAME, O_CREAT, 0777, &mail_queue_attributes);
+	if (mail_queue <= -1) {
+		perror("[Postman] - Couldn\' open the MQ during init\n");
+	}
 
-		check = mq_close(mail_queue);
-		if (check != 0) {
-			perror("[Postman] - Issue while closing the MQ during init\n");
-		}
-		check = pthread_create(&dispenser_manager_thread, NULL, (void*)&DispenserManager_run, NULL);
-		if (check != 0) {
-			perror("[Postman] - Issue while creating postman thread\n");
-		}
+	check = mq_close(mail_queue);
+	if (check != 0) {
+		perror("[Postman] - Issue while closing the MQ during init\n");
+	}
+	check = pthread_create(&dispenser_manager_thread, NULL, (void*)&DispenserManager_run, NULL);
+	if (check != 0) {
+		perror("[Postman] - Issue while creating postman thread\n");
+	}
 }
 
 static void *DispenserManager_run() {
@@ -375,7 +375,7 @@ void DispenserManager_compromised_dispenser_event(Dispenser* this) {
 	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
 	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
-	msg.event = E_INF_CPT_INVALID_MESSAGE;
+	msg.event = E_MAX_CPT_INVALID_MESSAGE;
 	DispenserManager_mq_send(msg);
 }
 
@@ -384,7 +384,7 @@ void DispenserManager_not_compromised_dispenser_event(Dispenser* this) {
 	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
 	msg.data_transmitted.battery_and_filling.filling = Dispenser_get_filling(this);
 	msg.id = Dispenser_get_id(this);
-	msg.event = E_MAX_CPT_INVALID_MESSAGE;
+	msg.event = E_INF_CPT_INVALID_MESSAGE;
 	DispenserManager_mq_send(msg);
 }
 
@@ -502,6 +502,14 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 		 this = this->next_dispenser;
 	 }
  }
+
+void DispenserManager_change_configuration(uint16_t time_between_emission) {
+	 Dispenser* this = dispenser_list->first_dispenser;
+	 while(this != NULL) {
+			 Dispenser_set_message(this, time_between_emission);
+			 this = this->next_dispenser;
+		 }
+}
 
 void DispenserManager_save_in_backup(Dispenser* this) {
 	//TODO
