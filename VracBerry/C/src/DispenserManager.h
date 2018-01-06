@@ -8,11 +8,9 @@
 #ifndef SRC_DISPENSERMANAGER_H_
 #define SRC_DISPENSERMANAGER_H_
 
-#define BACKUP_FILE "/jesaispas/backup.txt"
 
-#define MQ_DISPENSER_MANAGER_NAME "/mq_dispenser_manager"
-#define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
-#define MQ_DISPENSER_MANAGER_MSG_COUNT (10)
+//TODO
+#define BACKUP_FILE "/jesaispas/backup.txt"
 
 #include "Network_Configuration.h"
 #include "Dispenser.h"
