@@ -52,7 +52,8 @@ ob_implicit_flush();
     </div>
     <div id="detail_window">
       <form action="index.php" method="post">
-        <p> Nouveau nom du produit : </p> <input type="text" id ="name_product" name="name" value="ERROR" />
+        <p> Nouveau nom du produit : </p> <input type="text" id = "name_product" name = "name" value = "ERROR" />
+        <input  id = "id_product" type="hidden" value="0"/>
       </form>
       <table>
         <tr>
