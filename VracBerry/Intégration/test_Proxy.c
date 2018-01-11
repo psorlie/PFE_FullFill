@@ -13,7 +13,6 @@ int main(int argc, char *argv[])
 	time(&actTime);
 	timeComp = localtime(&actTime);
 
-	//printf("début du main\n");
 	Postman_init();
 
 	Postman_listen_start();
@@ -28,12 +27,10 @@ int main(int argc, char *argv[])
 	sprintf(time_string, "%02d:%02d", timeComp->tm_hour, timeComp->tm_min);
 	Proxy_send_network(time_string, time_string, time_string, 15);
 
-	//printf("Listen end\n");
+	usleep(100000000);
 
 	Postman_listen_stop();
 	Postman_destroy();
-
-	//printf("fin du programme\n");
 
     return 0;
 }

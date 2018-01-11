@@ -32,20 +32,79 @@ Pour avoir la date et l'heure du jour :
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include <time.h>
 
 //#include "Application.h"
 #include "Postman.h"
 #include "cJSON.h"
 //#include "Dispenser.h"
 #include "Proxy.h"
-#include <time.h>
 
 
-void Proxy_send(char* message){
+/*
+static void Proxy_send(char* message){
 	Postman_send(message);
 }
 
-void Proxy_send_update(int id, int filling, char* name){
+void Proxy_send_update(Dispenser* this){
+	cJSON *msg = NULL;
+	msg = cJSON_CreateObject();
+	cJSON_AddStringToObject(msg, "type", "update");
+	cJSON_AddNumberToObject(msg, "id", (uint8_t)Dispenser_get_id(this));
+	cJSON_AddNumberToObject(msg, "filling", (uint8_t)Dispenser_get_filling(this));
+	//cJSON_AddNumberToObject(update, "battery", battery);
+	cJSON_AddStringToObject(msg, "name", Dispenser_get_product_name(this));
+	Proxy_send(cJSON_Print(msg));
+}
+
+void Proxy_send_new(Dispenser* this){
+	cJSON *msg = NULL;
+	msg = cJSON_CreateObject();
+	cJSON_AddStringToObject(msg, "type", "new");
+	cJSON_AddNumberToObject(msg, "id", (uint8_t)Dispenser_get_id(this));
+	cJSON_AddNumberToObject(msg, "filling", (uint8_t)Dispenser_get_filling(this));
+	//cJSON_AddNumberToObject(update, "battery", battery);
+	cJSON_AddStringToObject(msg, "name", Dispenser_get_product_name(this));
+	Proxy_send(cJSON_Print(msg));
+}
+
+void Proxy_send_detail(Dispenser* this){
+	char date [10];
+	sprintf(date, "%02d-%02d-%d", Dispenser_get_day(this), Dispenser_get_month(this), Dispenser_get_year(this));
+	cJSON *msg = NULL;
+	msg = cJSON_CreateObject();
+	cJSON_AddStringToObject(msg, "type", "detail");
+	cJSON_AddNumberToObject(msg, "id", (uint8_t)Dispenser_get_id(this));
+	cJSON_AddNumberToObject(msg, "filling", (uint8_t)Dispenser_get_filling(this));
+	cJSON_AddNumberToObject(msg, "battery", (uint8_t)Dispenser_get_battery(this));
+	cJSON_AddStringToObject(msg, "date", date);
+	cJSON_AddStringToObject(msg, "name", Dispenser_get_product_name(this));
+	Proxy_send(cJSON_Print(msg));
+}
+*/
+
+/*
+void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, uint8_t cleaning_interval_day){
+	cJSON *msg = NULL;
+	msg = cJSON_CreateObject();
+	cJSON_AddStringToObject(msg, "type", "network");
+	cJSON_AddStringToObject(msg, "sleep_time", sleep_time);
+	cJSON_AddStringToObject(msg, "wake_up_time", wake_up_time);
+	cJSON_AddStringToObject(msg, "cycle_time", cycle_time);
+	cJSON_AddNumberToObject(msg, "cleaning_interval_day", cleaning_interval_day);
+	Proxy_send(cJSON_Print(msg));
+}
+*/
+
+	// Version de test (sans Dispenser et DispenserManager)
+
+
+static void Proxy_send(char* message){
+	Postman_send(message);
+}
+
+void Proxy_send_update(uint8_t id, uint8_t filling, char* name){
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
 	cJSON_AddStringToObject(msg, "type", "update");
@@ -56,7 +115,7 @@ void Proxy_send_update(int id, int filling, char* name){
 	Proxy_send(cJSON_Print(msg));
 }
 
-void Proxy_send_detail(int id, int filling, int battery, char* date, char* name){
+void Proxy_send_detail(uint8_t id, uint8_t filling, uint8_t battery, char* date, char* name){
 
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
@@ -69,7 +128,7 @@ void Proxy_send_detail(int id, int filling, int battery, char* date, char* name)
 	Proxy_send(cJSON_Print(msg));
 }
 
-void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, int cleaning_interval_day){
+void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, uint8_t cleaning_interval_day){
 
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
@@ -80,6 +139,7 @@ void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, 
 	cJSON_AddNumberToObject(msg, "cleaning_interval_day", cleaning_interval_day);
 	Proxy_send(cJSON_Print(msg));
 }
+
 
 /*
 void Proxy_send_dirty_alert(Dispenser_t[] dispenser_list){
