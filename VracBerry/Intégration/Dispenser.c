@@ -312,10 +312,17 @@ int Dispenser_get_year(Dispenser* this) {
 	return ret;
 }
 
+int Dispenser_get_month(Dispenser* this) {
+	assert(this != NULL);
+	int ret = Date_get_month(this->last_wash_date);
+	assert(ret >= 0 && ret <= 12);
+	return ret;
+}
+
 int Dispenser_get_day(Dispenser* this) {
 	assert(this != NULL);
 	int ret = Date_get_day(this->last_wash_date);
-	assert(ret >= 0 && ret <= 366);
+	assert(ret >= 0 && ret <= 31);
 	return ret;
 }
 

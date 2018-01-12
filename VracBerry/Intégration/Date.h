@@ -21,6 +21,8 @@ extern void Date_destroy(Date*);
 
 extern int Date_get_year(Date*);
 
+extern int Date_get_month(Date* this);
+
 extern int Date_get_day(Date*);
 
 extern Date* Date_set_specified_date(int, int);

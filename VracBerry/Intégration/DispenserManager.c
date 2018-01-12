@@ -11,7 +11,7 @@
 #include <mqueue.h>
 #include <pthread.h>
 
-#include "Application.h"
+#include "Proxy.h"
 #include "DispenserManager.h"
 #include "Translator.h"
 
@@ -50,6 +50,7 @@ static Dispenser_list* DispenserManager_initialisation() {
 	return list;
 }
 
+// Appelé par le main
 void DispenserManager_init() {
 	struct mq_attr mail_queue_attributes;
 	int check;
@@ -60,21 +61,21 @@ void DispenserManager_init() {
 
 	check = mq_unlink(MQ_DISPENSER_MANAGER_NAME);
 	if(check != 0) {
-		perror("[Postman] - MQ already exist ?\n");
+		perror("[DispenserManager] - MQ already exist ?\n");
 	}
 
 	mail_queue = mq_open(MQ_DISPENSER_MANAGER_NAME, O_CREAT, 0777, &mail_queue_attributes);
 	if (mail_queue <= -1) {
-		perror("[Postman] - Couldn\' open the MQ during init\n");
+		perror("[DispenserManager] - Couldn\' open the MQ during init\n");
 	}
 
 	check = mq_close(mail_queue);
 	if (check != 0) {
-		perror("[Postman] - Issue while closing the MQ during init\n");
+		perror("[DispenserManager] - Issue while closing the MQ during init\n");
 	}
 	check = pthread_create(&dispenser_manager_thread, NULL, (void*)&DispenserManager_run, NULL);
 	if (check != 0) {
-		perror("[Postman] - Issue while creating postman thread\n");
+		perror("[DispenserManager] - Issue while creating postman thread\n");
 	}
 }
 
@@ -89,16 +90,20 @@ static void *DispenserManager_run() {
 			Dispenser_run(this, msg);
 		} else {
 			this = DispenserManager_add_new_detected_dispenser(msg.id, msg.data_transmitted.battery_and_filling.battery, msg.data_transmitted.battery_and_filling.filling);
-			Application_add_new_dispenser(this);
+			Proxy_send_new(this);
 		}
 	}
 	return NULL;
 }
 
+/*
+// Appelé par le dispatcher
 void DispenserManager_ask_product_name(Dispenser* this) {
-	Application_add_new_dispenser(this);
+	Proxy_send_new(this);
 }
+*/
 
+/*
 static void DispenserManager_read_backup() {
 	//TODO untested
 	int state;
@@ -129,11 +134,14 @@ static void DispenserManager_read_backup() {
 		fclose(file_identifier);
 	}
 }
+*/
 
 void DispenserManager_send_detailed_dispenser(Dispenser* this) {
-	Application_detailed_dispenser(this);
+	Proxy_send_detail(this);
 }
 
+/*
+// Internal?
 Dispenser* DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {
 		printf("initialisation\n");
@@ -146,23 +154,30 @@ Dispenser* DispenserManager_add_dispenser(Dispenser_Id id, char* product, Batter
 	dispenser_list->first_dispenser = new_dispenser;
 	return new_dispenser;
 }
+*/
 
+/*
 static void DispenserManager_add_dispenser_from_backup(Dispenser_Id id, char* product, Battery battery, Filling filling, int day, int year, int state) {
 	Dispenser* this = DispenserManager_add_dispenser(id, product, battery, filling);
 	Dispenser_set_specified_date(this, day, year);
 	this->state = (DispenserState)state;
 }
+*/
 
+/*
+// UART
 Dispenser* DispenserManager_add_new_detected_dispenser(Dispenser_Id id, Battery battery, Filling filling) {
 	Dispenser* this;
 	this = DispenserManager_add_dispenser(id, DEFAULT_PRODUCT_NAME, battery, filling);
 	return this;
 }
+*/
 
 Dispenser* DispenserManager_get_list(){
 	return dispenser_list->first_dispenser;
 }
 
+// Appelée par le main
 void DispenserManager_free_dispenser(Dispenser_Id id) {
 	assert(dispenser_list != NULL);
 	Dispenser* before_deleted_dispenser;
@@ -223,21 +238,25 @@ Dispenser* DispenserManager_find_dispenser(Dispenser_Id id) {
 		return current_dispenser;
 }
 
+//Appelé par le dispatcher
 void DispenserManager_update_battery(Dispenser_Id id, Battery battery) {
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	Dispenser_set_battery(dispenser, battery);
 }
 
+//Appelé par le dispatcher
 void DispenserManager_update_filling(Dispenser_Id id, Filling filling) {
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	Dispenser_set_filling(dispenser, filling);
 }
 
+//Appelé par le dispatcher
 void DispenserManager_update_product(Dispenser_Id id, char* product_name) {
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	Dispenser_set_product(dispenser, product_name);
 }
 
+//Appelé par le dispatcher
 void DispenserManager_update_last_wash_date(Dispenser_Id id) {
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);
 	Dispenser_set_current_date(dispenser);
@@ -304,8 +323,9 @@ void DispenserManager_printf(char* arg) {
 	printf("--------------------------- fin printf ------------------------------------------\n");
 }
 
+// Appel du proxy
 void DispenserManager_send_update(Dispenser* this) {
-	Application_update_dispenser(this);
+	Proxy_send_update(this);
 }
 
 static void DispenserManager_mq_send(DispenserMqMsg message) {
@@ -344,6 +364,7 @@ static DispenserMqMsg DispenserManager_mq_receive() {
 	return msg_adapter.data;
 }
 
+// TODO : qui appelle cette fonction??
 void DispenserManager_check_message(Dispenser* this) {
 	DispenserMqMsg msg;
 	if(this->message != NULL) {
@@ -357,6 +378,7 @@ void DispenserManager_check_message(Dispenser* this) {
 	DispenserManager_mq_send(msg);
 }
 
+// TODO : qui appelle cette fontion??
 void DispenserManager_check_conformity_data(DispenserMqMsg message) {
 	DispenserMqMsg msg;
 	msg.data_transmitted.battery_and_filling.filling = message.data_transmitted.battery_and_filling.filling;
@@ -370,6 +392,7 @@ void DispenserManager_check_conformity_data(DispenserMqMsg message) {
 	DispenserManager_mq_send(msg);
 }
 
+// TODO : qui appelle cette fontion??
 void DispenserManager_compromised_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
 	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
@@ -379,6 +402,7 @@ void DispenserManager_compromised_dispenser_event(Dispenser* this) {
 	DispenserManager_mq_send(msg);
 }
 
+// TODO : qui appelle cette fontion??
 void DispenserManager_not_compromised_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
 	msg.data_transmitted.battery_and_filling.battery = Dispenser_get_battery(this);
@@ -388,6 +412,7 @@ void DispenserManager_not_compromised_dispenser_event(Dispenser* this) {
 	DispenserManager_mq_send(msg);
 }
 
+// TODO : qui appelle cette fontion??
 void DispenserManager_lost_dispenser_event(Dispenser* this) {
 	DispenserMqMsg msg;
 	msg.data_transmitted.battery_and_filling.battery =  Dispenser_get_battery(this);
@@ -406,6 +431,7 @@ void DispenserManager_not_lost_dispenser_event(Dispenser* this) {
 	DispenserManager_mq_send(msg);
 }
 
+// Appelé par le dispatcher
 void DispenserManager_ask_detailed_dispenser(Dispenser_Id id) {
 	Dispenser* this;
 	this = DispenserManager_find_dispenser(id);
@@ -417,6 +443,7 @@ void DispenserManager_ask_detailed_dispenser(Dispenser_Id id) {
 	DispenserManager_mq_send(msg);
 }
 
+// Appelé par le dispatcher
 void DispenserManager_ask_all_update() {
 	Dispenser* current_dispenser = dispenser_list->first_dispenser;
 	while (current_dispenser != NULL) {
@@ -434,6 +461,7 @@ static void DispenserManager_ask_update(Dispenser* this) {
 	DispenserManager_mq_send(message);
 }
 
+// UART
 void DispenserManager_received_message(Dispenser_Id id, Battery battery, Filling filling) {
 	DispenserMqMsg message;
 	message.id = id;
@@ -443,18 +471,24 @@ void DispenserManager_received_message(Dispenser_Id id, Battery battery, Filling
 	DispenserManager_mq_send(message);
 }
 
+// UART
 void DispenserManager_send_message_to_dispenser(Dispenser_Id id, MessageToSend* message) {
 	Translator_send_message((uint8_t)id, message->message);
 }
 
+// Appelle le proxy
 void DispenserManager_send_warning_broken_dispenser(Dispenser_Id id) {
-	Application_warn_dispenser_is_broken(id);
+	//Application_warn_dispenser_is_broken(id);
+	printf("broken dispenser")
 }
 
+// Appelle le proxy
 void DispenserManager_send_warning_lost_dispenser(Dispenser_Id id) {
-	Application_warn_dispenser_is_lost(id);
+	//Application_warn_dispenser_is_lost(id);
+	printf("lost dispenser")
 }
 
+// TODO : Qui appelle cette fonction??
 void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	DispenserMqMsg message;
 	message.id = id;
@@ -464,6 +498,8 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	message.event = E_DESTROY;
 	DispenserManager_mq_send(message);
 }
+
+// Appelé par le dispatcher
  void DispenserManager_prepare_set_new_product_name(Dispenser_Id id, char* name) {
 	 DispenserMqMsg message;
 	 message.id = id;
@@ -473,14 +509,17 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	 DispenserManager_mq_send(message);
  }
 
+// UART
  void DispenserManager_tell_dispenser_broken(Dispenser_Id id) {
 	 Translator_send_message((uint8_t)id, PRODUCT_BROKEN);
  }
 
+// UART
  void DispenserManager_tell_dispenser_repeat(Dispenser_Id id) {
 	 Translator_send_message((uint8_t)id, PRODUCT_REPEAT);
  }
 
+// Appelé par Network_config
  void DispenserManager_end_of_the_day() {
 	 Dispenser* this = dispenser_list->first_dispenser;
 	 while(this != NULL) {
@@ -492,6 +531,7 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	 }
  }
 
+// Appelé par Network_config
  void DispenserManager_morning() {
 	 Dispenser* this = dispenser_list->first_dispenser;
 	 while(this != NULL) {
@@ -503,6 +543,7 @@ void DispenserManager_prepare_destroy_dispenser(Dispenser_Id id) {
 	 }
  }
 
+// Dans Network config??
 void DispenserManager_change_configuration(uint16_t time_between_emission) {
 	 Dispenser* this = dispenser_list->first_dispenser;
 	 while(this != NULL) {

@@ -134,6 +134,8 @@ extern Dispenser_Id Dispenser_get_id(Dispenser*);
 
 extern Filling Dispenser_get_filling(Dispenser*);
 
+extern Date* Dispenser_get_last_wash_date(Dispenser*);
+
 extern void Dispenser_set_product(Dispenser*, char*);
 
 extern void Dispenser_set_battery(Dispenser*, Battery);
