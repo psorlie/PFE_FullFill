@@ -19,12 +19,14 @@ ob_implicit_flush();
       <div id="corps">
         <div class="line">
         <?php
-        $handle = @fopen("/opt/vrac-berry/backup_file.txt", "r");
+        //$handle = @fopen("/opt/vrac-berry/backup_file.txt", "r");
+        $handle = @fopen("../backup_file.txt", "r");
         if ($handle) {
           $i = 0;
           while (($buffer = fgets($handle, 4096)) !== false) {
-            echo "<span class=\"space\"> </span><button id=\"button_". $i . "\" class=\"dispenser\">";
             $array_for_dispenser = explode("/", $buffer, 5);
+            echo "<span class=\"space\"> </span><button id=\"button_". $array_for_dispenser[0] . "\" class=\"dispenser\">";
+            
             $generated_string = " ID : <span class=\"id_dispenser\">" . $array_for_dispenser[0] . "</span><br/>"; // ID
             $generated_string .= " Remplissage : <span class=\"filling_dispenser\">" . $array_for_dispenser[1] . "</span><br/>"; // filling
             $generated_string .= "  Batterie : <span class=\"battery_dispenser\">" . $array_for_dispenser[2] . "</span><br/>"; // battery
@@ -52,7 +54,7 @@ ob_implicit_flush();
     </div>
     <div id="detail_window">
       <form action="index.php" method="post">
-        <p> Nouveau nom du produit : </p> <input type="text" id = "name_product" name = "name" value = "ERROR" />
+        <p> Nouveau nom du produit : </p> <input type="text" id = "name_product" name = "name" value = "ENTER A PRODUCT NAME" />
         <input  id = "id_product" type="hidden" value="0"/>
       </form>
       <table>

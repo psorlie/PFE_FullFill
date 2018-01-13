@@ -1,60 +1,137 @@
-// connection created at the opening of the page
-var connection = new WebSocket( "ws://192.168.50.86:80", "example-protocol" );
 
+function include(fileName){
+  document.write("<script type='text/javascript' src='"+fileName+"'></script>" );
+}
+
+include("../js/mqttws31.js");
+//src="jquery.min.js";
+include("../js/config.js");
+
+var mqtt;
+var reconnectTimeout = 2000;
+
+function MQTT_send(message){
+    mqtt.send(TOPIC_ENVOI, message, QOS, false);
+}
+  
+function MQTTconnect() {
+    if (typeof path == "undefined") {
+        path = "/mqtt";
+    }
+    mqtt = new Paho.MQTT.Client(
+            HOST,
+            PORT,
+            path,
+            "web_" + parseInt(Math.random() * 100, 10)
+    );
+        var options = {
+            timeout: 3,
+            useSSL: useTLS,
+            cleanSession: CLEANSESSION,
+            onSuccess: onConnect,
+            onFailure: function (message) {
+                console.log("Connection failed: " + message.errorMessage + "Retrying");
+                setTimeout(MQTTconnect, reconnectTimeout);
+            }
+        };
+
+        mqtt.onConnectionLost = onConnectionLost;
+        mqtt.onMessageArrived = onMessageArrived;
+
+        if (username != null) {
+            options.userName = username;
+            options.password = password;
+        }
+        console.log("Host="+ HOST + ", port=" + PORT + ", path=" + path + " TLS = " + useTLS + " username=" + username + " password=" + password);
+        mqtt.connect(options);
+    }
+
+function onConnect() {
+    console.log('Connected to ' + HOST + ':' + PORT + path);
+    // Connection succeeded; subscribe to our topic
+    mqtt.subscribe(TOPIC_RECEPTION, {qos: 1});
+    console.log("topic : " + TOPIC_RECEPTION);
+
+    //MQTT_send("HaHaHaHa Merlin!");
+
+}
+
+function onConnectionLost(response) {
+    setTimeout(MQTTconnect, reconnectTimeout);
+    //console.log("connection lost: " + responseObject.errorMessage + ". Reconnecting");
+    console.log("connection lost: " + response.errorMessage + ". Reconnecting");
+};
+
+  function onMessageArrived(message) {
+
+      var topic = message.destinationName;
+      var payload = message.payloadString;
+
+      console.log(topic + ' = ' + payload);
+
+      //MQTT_send('{"type":"msjgtbmstjn", "id":145}');
+      dispatch(payload);
+  };
+
+
+  $(document).ready(function() {
+      MQTTconnect();
+  });
 
 //function called everytime a socket is received
-function on_receive(data) {
+function dispatch(data) {
   var msg = JSON.parse(data);
+  console.log("reçu : " + msg.type);
   switch (msg.type) {
     // is an answer to someone asking for the details of a dispenser
     case "detail":
-    setDetailWindow(msg.id, msg.filling, msg.battery, msg.date, msg.name);
+      console.log("j'ai reçu un detail");
+      setDetailWindow(msg.id, msg.filling, msg.battery, msg.date, msg.name);
     break;
     // a update sent by the server
     case "update":
-    setUpdateButton(msg.id, msg.filling, msg.battery, msg.name);
+      console.log("j'ai reçu un update");
+      setUpdateButton(msg.id, msg.filling, msg.name);
     break;
     // server alert when a dispenser is dirty
     case "dirty_alert":
-    for (var count = 0 ; count < msg.dirty_dispenser.length ; count ++){
-      window.alert("the dispenser number " + msg.dirty_dispenser[count] + " is dirty");
-    }
+      console.log("j'ai reçu une dirty_alert");
+      for (var count = 0 ; count < msg.dirty_dispenser.length ; count ++){
+        window.alert("the dispenser number " + msg.dirty_dispenser[count] + " is dirty");
+      }
     break;
     // answer when the network configuration is called
     case "network":
-    setNetworkWindow(msg.sleep_time, msg.wake_up_time, msg.cycle_time, msg.day_between_cleaning);
+      console.log("j'ai reçu un network");
+      setNetworkWindow(msg.sleep_time, msg.wake_up_time, msg.cycle_time, msg.cleaning_interval_day);
     break;
 
     case "new":
-    addNewButton(msg.id, msg.filling, msg.battery, msg.name);
+      console.log("j'ai reçu un nouveau dispenser");
+      addNewButton(msg.id, msg.filling, msg.battery, msg.name);
     break;
 
     default:
-    window.alert("c'est la merde, on recoit des types chelous");
+      window.alert("c'est la merde, on recoit des types chelous");
   }
-}
-
-// function tu prepare the sending : depending of the transition, it will hide the old div and make visible the new one
-function send_socket (text) {
-  console.log("before really sending");
-  connection.send(text);
-  console.log("after_sending");
 }
 
 function send_request_socket(type) {
   var data = new Object();
   data.type = type;
   var string = JSON.stringify(data);
-  send_socket(string);
+  console.log("envoi de" + string);
+  MQTT_send(string);
 }
 
 function send_socket_with_id(type, id) {
-var data = new Object();
-data.type = type;
-data.id = id;
-var string = JSON.stringify(data);
-send_socket(string);
-}
+  var data = new Object();
+  data.type = type;
+  data.id = id;
+  var string = JSON.stringify(data);
+  console.log("envoi de" + string);
+  MQTT_send(string);
+  }
 
 function send_socket_with_id_and_name(type, id, name){
   var data = new Object();
@@ -62,18 +139,20 @@ function send_socket_with_id_and_name(type, id, name){
   data.id = id;
   data.name = name;
   var string = JSON.stringify(data);
-  send_socket(string);
+  console.log("envoi de" + string);
+  MQTT_send(string);
 }
 
-function send_configuration_socket(sleep, wake, freq_msg, freq_clean) {
+function send_configuration_socket(type, sleep, wake, freq_msg, freq_clean) {
   var data = new Object();
   data.type = type;
-  data.sleep_time = sleep_time;
+  data.sleep_time = sleep;
   data.wake_up_time = wake;
   data.cycle_time = freq_msg;
   data.cleaning_interval_day = freq_clean;
   var string = JSON.stringify(data);
-  send_socket(string);
+  console.log("envoi de" + string);
+  MQTT_send(string);
 }
 
 function change_window (current_window, new_window) {
@@ -82,10 +161,12 @@ function change_window (current_window, new_window) {
 }
 // function called after receiving the detail for a dispenser : it fill the div with new data
 function setDetailWindow(id, filling, battery, date, name){
+  $("#id_product").val(id);
   $("#filling_data").text(filling);
   $("#battery_data").text(battery);
   $("#last_washing_date_data").text(date);
   $("#name_product").val(name);
+  //console.log("ninja : " + $("#id_product").val(''+100) + " alors qu'on devrait avoir : " + id);
 }
 
 // function called after receiving the network configuration : it fill the div with new data
@@ -93,14 +174,15 @@ function setNetworkWindow(sleep, wake_up, cycle, day_between_cleaning){
   $("#sleeping_hour_data").val(sleep);
   $("#waking_hour_data").val(wake_up);
   $("#in_between_message_time_data").val(cycle);
+  console.log(day_between_cleaning);
   $("#cleaning_frequency_data").val(day_between_cleaning);
 }
 
 // function called after receiving the update information for a specified dispenser : it fill the div with new data
-function setUpdateButton(id_updated, new_filling, new_battery, new_name){
+function setUpdateButton(id_updated, new_filling, new_name){
   var id_button = "#button_" + id_updated;
   $(id_button).children(".filling_dispenser").text(new_filling);
-  $(id_button).children(".battery_dispenser").text(new_battery);
+  //$(id_button).children(".battery_dispenser").text(new_battery);
   $(id_button).children(".name_dispenser").text(new_name);
   parse_button(id_button);
 }
@@ -130,7 +212,7 @@ function issue_called(text_for_alert){
 function addNewButton(id, filling, battery, name) {
   var last_line = $(".line").last();
   var new_button = ""
-  if(last_line.length() === 3)
+  if(last_line.length() === 3){
     $("#corps").append("<div class=\"line\"></div>");
     last_line = $(".line").last();
   }
@@ -149,70 +231,54 @@ function addNewButton(id, filling, battery, name) {
 $(".dispenser").each(function(){
   var $this = $(this);
   parse_button($this);
+  console.log("je suis à jour");
 });
 
 
 // called when the user click on a dispenser button
 $(".dispenser").click(function() {
-  connection.onopen = function(event) {
-    send_socket_with_id("ask_detail", "" + $(this).children(".id_dispenser").text());
+    send_socket_with_id("ask_detail", parseInt($(this).children(".id_dispenser").text()));
     change_window("data_window", "detail_window");
-  }
 });
 // called when the user click on the network configuration button
 $("#network_request").click(function() {
-  connection.onopen = function(event) {
     send_request_socket("ask_network");
     change_window("data_window", "network_window");
-  }
 });
 
 // called when the user wants to come back to the data window from the network window
 $("#data_request_from_network").click(function() {
-  connection.onopen = function(event) {
     send_request_socket("ask_full_update");
     change_window("network_window", "data_window");
-  }
 });
 
 // called when the user wants to come back to the data window from the detail window
 $("#data_request_from_detail").click(function() {
-  connection.onopen = function(event) {
     send_request_socket("ask_full_update");
     change_window("detail_window", "data_window");
-  }
 });
 
 // function called when the user want to send a new configuration
 $("#send_new_configuration").click(function() {
-  connection.onopen = function(event) {
     var sleeping_hour = $("#sleeping_hour_data").val();
     var waking_hour = $("#waking_hour_data").val();
     var between_message = $("#in_between_message_time_data").val();
     var frequency = $("#cleaning_frequency_data").val();
-    send_configuration_socket("network_update", sleeping_hour, waking_hour, between_message, frequency);
+    send_configuration_socket("network_update", parseInt(sleeping_hour), parseInt(waking_hour), parseInt(between_message), parseInt(frequency));
     change_window("network_window", "data_window");
     //TODO verify we get the value
     //TODO change sending function with MQTT
-  }
 });
 
 // function called when the user want to send a cleaning update
 $("#send_cleaning_update").click(function() {
-  connection.onopen = function(event) {
-    send_socket_with_id("cleaning_update", $("#id_product").val());
-    change_window("detail_window", "data_window");
-  }
+    send_socket_with_id("cleaning_update", parseInt($("#id_product").val()));
+    //change_window("detail_window", "data_window");
 });
 
 // function called when the user want to send the new name of a product
 $("#send_name_update").click(function() {
   //TODO   verify we get the value
-  send_socket_with_id_and_name("name_update", $("#id_product").val(), $("#name_product").val(););
-  change_window("detail_window", "data_window");
+  send_socket_with_id_and_name("name_update", parseInt($("#id_product").val()), $("#name_product").val());
+  //change_window("detail_window", "data_window");
 });
-
-// function called when a socket is received
-connection.onmessage = function(event) {
-  on_receive(event);
-};
