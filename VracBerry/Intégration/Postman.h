@@ -21,6 +21,13 @@
 #define CLEAN_SESSION 	true				// FALSE -> keep topic subscriptions after disconnect
 #define RETAIN			false 				// TRUE -> keep messages in the memory (be careful tu erase it after reception)
 
+#define TYPE_ASK_DETAIL		"ask_detail"
+#define TYPE_ASK_UPDATE		"ask_full_update"
+#define TYPE_ASK_NETWORK	"ask_network"
+#define TYPE_CLEAN_UPDATE	"cleaning_update"
+#define TYPE_NAME_UPDATE	"name_update"
+#define TYPE_NETWORK_UPDATE	"network_update"
+
 
 extern void Postman_init();
 extern void Postman_destroy();

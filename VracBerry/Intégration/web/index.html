@@ -68,6 +68,9 @@
         var payload = message.payloadString;
 
         $('#ws').prepend('<li>' + topic + ' = ' + payload + '</li>');
+
+        mqtt.send(topic_envoi, '{"type":"msjgtbmstjn", "id":145}', 0, false);
+        console.log("fin de l'envoi");
     };
 
 

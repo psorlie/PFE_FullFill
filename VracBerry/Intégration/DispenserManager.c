@@ -238,6 +238,7 @@ Dispenser* DispenserManager_find_dispenser(Dispenser_Id id) {
 		return current_dispenser;
 }
 
+/* TEST */
 //Appelé par le dispatcher
 void DispenserManager_update_battery(Dispenser_Id id, Battery battery) {
 	Dispenser* dispenser = DispenserManager_find_dispenser(id);

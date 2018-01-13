@@ -116,7 +116,6 @@ void Proxy_send_update(uint8_t id, uint8_t filling, char* name){
 }
 
 void Proxy_send_detail(uint8_t id, uint8_t filling, uint8_t battery, char* date, char* name){
-
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
 	cJSON_AddStringToObject(msg, "type", "detail");
@@ -128,14 +127,13 @@ void Proxy_send_detail(uint8_t id, uint8_t filling, uint8_t battery, char* date,
 	Proxy_send(cJSON_Print(msg));
 }
 
-void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, uint8_t cleaning_interval_day){
-
+void Proxy_send_network(char* sleep_time, char* wake_up_time, uint8_t cycle_time_min, uint8_t cleaning_interval_day){
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
 	cJSON_AddStringToObject(msg, "type", "network");
 	cJSON_AddStringToObject(msg, "sleep_time", sleep_time);
 	cJSON_AddStringToObject(msg, "wake_up_time", wake_up_time);
-	cJSON_AddStringToObject(msg, "cycle_time", cycle_time);
+	cJSON_AddNumberToObject(msg, "cycle_time", cycle_time_min);
 	cJSON_AddNumberToObject(msg, "cleaning_interval_day", cleaning_interval_day);
 	Proxy_send(cJSON_Print(msg));
 }

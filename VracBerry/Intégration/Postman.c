@@ -3,8 +3,11 @@
 #include <mosquitto.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <unistd.h>
 #include "Postman.h"
 #include "cJSON.h"
+#include "math.h"
+#include "Proxy.h"
 
 struct mosquitto *mosq = NULL;
 
@@ -27,18 +30,114 @@ void Postman_listen_stop()
 static void parse_object(cJSON *root)
 {
     cJSON* type = cJSON_GetObjectItem(root, "type");
-    cJSON* id = cJSON_GetObjectItem(root, "id");
-    /*
-    if(strcmp((char*)type, "")==0){
-        ...
-    }*/
-    printf("type %s ; id %d", (char*)type, (uint8_t)id);
+    char* type_str = "";
+    if(cJSON_IsString(type)){
+        type_str = type -> valuestring;
+    } else {
+        perror ("message non géré : type pas un string");
+    }
+
+    printf("type %s", type_str);
+    
+    if(strcmp(type_str, TYPE_ASK_DETAIL)==0){
+        cJSON* id = cJSON_GetObjectItem(root, "id");
+        int id_int = 0;
+        if(cJSON_IsNumber(id)){
+            id_int = id -> valueint;
+        } else {
+            perror ("message non géré : id pas un int");
+        }
+
+        printf("détail, %d\n", id_int);
+        //DispenserManager_ask_detailed_dispenser(id_int);
+    }
+    else if(strcmp(type_str, TYPE_ASK_UPDATE)==0){
+        printf("update\n");
+        usleep(1000000);
+        //Proxy_send_update(2, 40, "schniorf");
+        //DispenserManager_ask_all_update();
+    }
+    else if(strcmp(type_str, TYPE_ASK_NETWORK)==0){
+        printf("network\n");
+        //Proxy_send_network("10:30", "12:30", 30, 31);
+        // Appel de la fonction dans Network Manager
+    }
+    else if(strcmp(type_str, TYPE_CLEAN_UPDATE)==0){
+        cJSON* id = cJSON_GetObjectItem(root, "id");
+        int id_int = 0;
+        if(cJSON_IsNumber(id)){
+            id_int = id -> valueint;
+        } else {
+            perror ("message non géré : id pas un int");
+        }
+
+        printf("clean, %d\n", id_int);
+        // Appel de la fonction dans Dispenser Manager
+    }
+    else if(strcmp(type_str, TYPE_NAME_UPDATE)==0){
+        cJSON* id = cJSON_GetObjectItem(root, "id");
+        int id_int = 0;
+        if(cJSON_IsNumber(id)){
+            id_int = id -> valueint;
+        } else {
+            perror ("message non géré : id pas un int");
+        }
+
+        cJSON* name = cJSON_GetObjectItem(root, "name");
+        char* name_str = "";
+        if(cJSON_IsString(name)){
+            name_str = name -> valuestring;
+        } else {
+            perror ("message non géré : name pas un string");
+        }
+
+        printf("détail, %d, %s\n", id_int, name_str);
+        // DispenserManager_prepare_set_new_product_name(id_int, name_str);
+    }
+    else if(strcmp(type_str, TYPE_NETWORK_UPDATE)==0){
+        cJSON* sleep_time = cJSON_GetObjectItem(root, "sleep_time");
+        char* sleep_time_str = "";
+        if(cJSON_IsString(sleep_time)){
+            sleep_time_str = sleep_time -> valuestring;
+        } else {
+            perror ("message non géré : sleep_time pas un string");
+        }
+
+        cJSON* wake_up_time = cJSON_GetObjectItem(root, "wake_up_time");
+        char* wake_up_time_str = "";
+        if(cJSON_IsString(wake_up_time)){
+            wake_up_time_str = wake_up_time -> valuestring;
+        } else {
+            perror ("message non géré : wake_up_time pas un string");
+        }
+
+        cJSON* cycle_time = cJSON_GetObjectItem(root, "cycle_time");
+        char* cycle_time_str = "";
+        if(cJSON_IsString(cycle_time)){
+            cycle_time_str = cycle_time -> valuestring;
+        } else {
+            perror ("message non géré : cycle_time pas un string");
+        }
+        
+        cJSON* cleaning_interval_day = cJSON_GetObjectItem(root, "cleaning_interval_day");
+        char* cleaning_interval_day_str = "";
+        if(cJSON_IsString(cleaning_interval_day)){
+            cleaning_interval_day_str = cleaning_interval_day -> valuestring;
+        } else {
+            perror ("message non géré : cleaning_interval_day pas un string");
+        }
+        
+        printf("network, %s, %s, %s, %s\n", sleep_time_str, wake_up_time_str, cycle_time_str, cleaning_interval_day_str);
+        // Appel de la fonction dans Network Manager
+    }
+    else
+        perror("message non géré : type de JSON inconnu");
 }
 
 static void Postman_dispatch(const struct mosquitto_message *message){
     cJSON *msg = NULL;
     msg = cJSON_Parse(message->payload);
-    parse_object_dispenser(msg);
+    parse_object(msg);
 }
 
 // Callback of message reception

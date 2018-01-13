@@ -8,6 +8,9 @@
 #ifndef SRC_DISPENSERMANAGER_H_
 #define SRC_DISPENSERMANAGER_H_
 
+#define MQ_DISPENSER_MANAGER_NAME           "/mq_dispenser_manager"
+#define MQ_DISPENSER_MANAGER_MSG_SIZE       2048    
+#define MQ_DISPENSER_MANAGER_MSG_COUNT      10    
 
 //TODO
 #define BACKUP_FILE "/jesaispas/backup.txt"
@@ -92,6 +95,12 @@ extern void DispenserManager_send_warning_broken_dispenser(Dispenser_Id);
 extern void DispenserManager_send_warning_lost_dispenser(Dispenser_Id);
 
 extern void DispenserManager_prepare_destroy_dispenser(Dispenser_Id);
+
+extern void DispenserManager_ask_detailed_dispenser(Dispenser_Id);
+
+extern void DispenserManager_ask_all_update();
+
+extern void DispenserManager_prepare_set_new_product_name(Dispenser_Id id, char* name);
 
 /**
  * @brief function called from the translator that had a dispenser with the data he sent

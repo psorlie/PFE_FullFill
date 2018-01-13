@@ -12,6 +12,8 @@ int main(int argc, char *argv[])
 
 	Postman_listen_start();
 
+	//while(1){}
+
 	//printf("avant la boucle\n");
 
 	while(1){
