@@ -11,8 +11,10 @@
 #include <stdbool.h>
 
 typedef struct {
+	int day_of_month;
+	int day_of_year;
 	int year;
-	int current_day;
+	int month;
 }Date;
 
 extern Date* Date_set_current_date();
@@ -23,8 +25,10 @@ extern int Date_get_year(Date*);
 
 extern int Date_get_month(Date* this);
 
-extern int Date_get_day(Date*);
+extern int Date_get_day_of_month(Date*);
 
-extern Date* Date_set_specified_date(int, int);
+extern int Date_get_day_of_year(Date*);
+
+extern Date* Date_set_specified_date(int, int, int, int);
 
 #endif /* SRC_DATE_H_ */

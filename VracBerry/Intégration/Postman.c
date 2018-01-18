@@ -7,7 +7,8 @@
 #include "Postman.h"
 #include "cJSON.h"
 #include "math.h"
-#include "Proxy.h"
+//#include "Proxy.h"
+#include "DispenserManager.h"
 
 struct mosquitto *mosq = NULL;
 
@@ -49,13 +50,13 @@ static void parse_object(cJSON *root)
         }
 
         printf("détail, %d\n", id_int);
-        //DispenserManager_ask_detailed_dispenser(id_int);
+        DispenserManager_ask_detailed_dispenser(id_int);
     }
     else if(strcmp(type_str, TYPE_ASK_UPDATE)==0){
         printf("update\n");
         usleep(1000000);
         //Proxy_send_update(2, 40, "schniorf");
-        //DispenserManager_ask_all_update();
+        DispenserManager_ask_all_update();
     }
     else if(strcmp(type_str, TYPE_ASK_NETWORK)==0){
         printf("network\n");
@@ -72,7 +73,7 @@ static void parse_object(cJSON *root)
         }
 
         printf("clean, %d\n", id_int);
-        // Appel de la fonction dans Dispenser Manager
+        DispenserManager_prepare_set_current_date(id_int);
     }
     else if(strcmp(type_str, TYPE_NAME_UPDATE)==0){
         cJSON* id = cJSON_GetObjectItem(root, "id");
@@ -92,7 +93,7 @@ static void parse_object(cJSON *root)
         }
 
         printf("détail, %d, %s\n", id_int, name_str);
-        // DispenserManager_prepare_set_new_product_name(id_int, name_str);
+        DispenserManager_prepare_set_new_product_name(id_int, name_str);
     }
     else if(strcmp(type_str, TYPE_NETWORK_UPDATE)==0){
         cJSON* sleep_time = cJSON_GetObjectItem(root, "sleep_time");
@@ -196,20 +197,25 @@ int keepalive = 60;
 bool clean_session = true;
 */
     // Mosquitto init
+    //printf("début d'init");
     mosquitto_lib_init();
+    //printf("init lib OK");
     mosq = mosquitto_new(NULL, CLEAN_SESSION, NULL);
     if(!mosq){
         fprintf(stderr, "Error: Out of memory.\n");
     }
+    //printf("nouveau mosquitto OK");
     mosquitto_log_callback_set(mosq, my_log_callback);
     mosquitto_connect_callback_set(mosq, my_connect_callback);
     mosquitto_message_callback_set(mosq, my_message_callback);
     mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
+    //printf("callbacks OK");
 
     // Connection to the broker
     if(mosquitto_connect(mosq, HOST, PORT, KEEP_ALIVE)){
         fprintf(stderr, "Unable to connect.\n");
     }
+    //printf("connect OK");
 }
 
 // Destruction of the MQTT client

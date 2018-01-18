@@ -32,17 +32,15 @@ Pour avoir la date et l'heure du jour :
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <time.h>
 
 //#include "Application.h"
 #include "Postman.h"
 #include "cJSON.h"
-//#include "Dispenser.h"
 #include "Proxy.h"
 
 
-/*
+
 static void Proxy_send(char* message){
 	Postman_send(message);
 }
@@ -58,6 +56,7 @@ void Proxy_send_update(Dispenser* this){
 	Proxy_send(cJSON_Print(msg));
 }
 
+/*
 void Proxy_send_new(Dispenser* this){
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
@@ -68,10 +67,11 @@ void Proxy_send_new(Dispenser* this){
 	cJSON_AddStringToObject(msg, "name", Dispenser_get_product_name(this));
 	Proxy_send(cJSON_Print(msg));
 }
+*/
 
 void Proxy_send_detail(Dispenser* this){
 	char date [10];
-	sprintf(date, "%02d-%02d-%d", Dispenser_get_day(this), Dispenser_get_month(this), Dispenser_get_year(this));
+	sprintf(date, "%02d-%02d-%d", Dispenser_get_day_of_month(this), Dispenser_get_month(this), Dispenser_get_year(this));
 	cJSON *msg = NULL;
 	msg = cJSON_CreateObject();
 	cJSON_AddStringToObject(msg, "type", "detail");
@@ -82,7 +82,7 @@ void Proxy_send_detail(Dispenser* this){
 	cJSON_AddStringToObject(msg, "name", Dispenser_get_product_name(this));
 	Proxy_send(cJSON_Print(msg));
 }
-*/
+
 
 /*
 void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, uint8_t cleaning_interval_day){
@@ -99,7 +99,7 @@ void Proxy_send_network(char* sleep_time, char* wake_up_time, char* cycle_time, 
 
 	// Version de test (sans Dispenser et DispenserManager)
 
-
+/*
 static void Proxy_send(char* message){
 	Postman_send(message);
 }
@@ -137,7 +137,7 @@ void Proxy_send_network(char* sleep_time, char* wake_up_time, uint8_t cycle_time
 	cJSON_AddNumberToObject(msg, "cleaning_interval_day", cleaning_interval_day);
 	Proxy_send(cJSON_Print(msg));
 }
-
+*/
 
 /*
 void Proxy_send_dirty_alert(Dispenser_t[] dispenser_list){

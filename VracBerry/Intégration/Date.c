@@ -11,10 +11,11 @@
 
 #include "Date.h"
 
-static void Date_free(Date*);
+//static void Date_free(Date*);
 
 static void Date_free(Date* this) {
-	this->current_day = 0;
+	this->day_of_month = 0;
+	this->day_of_year = 0;
 	this->month = 0;
 	this->year = 0;
 	free(this);
@@ -30,16 +31,18 @@ Date* Date_set_current_date() {
 	this = (Date *) malloc (sizeof(Date));
 
 	this->year = (1900 + timeinfo->tm_year);
-	this->month = timeinfo->tm_mon + 1
-	this->current_day = timeinfo->tm_mday;
+	this->month = timeinfo->tm_mon + 1;
+	this->day_of_month = timeinfo->tm_mday;
+	this->day_of_year = timeinfo->tm_yday;
 	return this;
 }
 
-Date* Date_set_specified_date(int day, int month int year) {
+Date* Date_set_specified_date(int day_of_month, int day_of_year, int month, int year) {
 	Date* this;
 	this = (Date *) malloc (sizeof(Date));
 
-	this->current_day = day;
+	this->day_of_month = day_of_month;
+	this->day_of_year = day_of_year;
 	this->month = month;
 	this->year = year;
 
@@ -53,9 +56,16 @@ int Date_get_year(Date* this) {
 	return ret;
 }
 
-int Date_get_day(Date* this) {
+int Date_get_day_of_year(Date* this) {
 	assert(this != NULL);
-	int ret = this->current_day;
+	int ret = this->day_of_year;
+	assert(ret >= 0 && ret <= 31);
+	return ret;
+}
+
+int Date_get_day_of_month(Date* this) {
+	assert(this != NULL);
+	int ret = this->day_of_month;
 	assert(ret >= 0 && ret <= 31);
 	return ret;
 }

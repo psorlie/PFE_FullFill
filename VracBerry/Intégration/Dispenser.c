@@ -15,6 +15,8 @@
 static DispenserTransition g_stateMachine[S_NBR_STATE][E_NBR_EVENT] = {
 		[S_RUN][E_SET_NEW_PRODUCT_NAME] =
 		{S_RUN, A_SET_NEW_PRODUCT_NAME},
+		[S_RUN][E_SET_CURRENT_DATE] =
+		{S_RUN, A_SET_CURRENT_DATE},
 		[S_RUN][E_RECEIVED_MESSAGE] =
 		{S_CHECK_DATA, A_RECEIVED_MESSAGE},
 		[S_RUN][E_END_OF_THE_DAY] =
@@ -113,6 +115,9 @@ static void Dispenser_has_received_a_message(Dispenser*);
 
 void Dispenser_run(Dispenser* this, DispenserMqMsg message) {
 	DispenserAction action;
+	char bid [50];
+	sprintf(bid, "state %d event %d", this->state, message.event);
+	perror(bid);
 	if(g_stateMachine[this->state][message.event].futurState == S_NOP){
 		perror("[Dispenser] - Perte d'évènement");
 	} else {
@@ -126,7 +131,11 @@ static void Dispenser_performAction(Dispenser* this, DispenserAction action, Dis
 	switch(action) {
 	case A_SET_NEW_PRODUCT_NAME:
 		Dispenser_set_product(this, message.data_transmitted.product);
-		DispenserManager_send_update(this);
+		DispenserManager_send_detailed_dispenser(this);
+		break;
+	case A_SET_CURRENT_DATE:
+		Dispenser_set_current_date(this);
+		DispenserManager_send_detailed_dispenser(this);
 		break;
 	case A_RECEIVED_MESSAGE:
 		Dispenser_has_received_a_message(this);
@@ -319,10 +328,17 @@ int Dispenser_get_month(Dispenser* this) {
 	return ret;
 }
 
-int Dispenser_get_day(Dispenser* this) {
+int Dispenser_get_day_of_month(Dispenser* this) {
 	assert(this != NULL);
-	int ret = Date_get_day(this->last_wash_date);
+	int ret = Date_get_day_of_month(this->last_wash_date);
 	assert(ret >= 0 && ret <= 31);
+	return ret;
+}
+
+int Dispenser_get_day_of_year(Dispenser* this) {
+	assert(this != NULL);
+	int ret = Date_get_day_of_year(this->last_wash_date);
+	assert(ret >= 0 && ret <= 366);
 	return ret;
 }
 
@@ -369,11 +385,11 @@ void Dispenser_set_current_date(Dispenser* this) {
 	this->last_wash_date = Date_set_current_date();
 }
 
-void Dispenser_set_specified_date(Dispenser* this, int day, int year) {
+void Dispenser_set_specified_date(Dispenser* this, int day_of_month, int day_of_year, int month, int year) {
 	if(this->last_wash_date != NULL) {
 		Date_destroy(this->last_wash_date);
 	}
-	this->last_wash_date = Date_set_specified_date(day, year);
+	this->last_wash_date = Date_set_specified_date(day_of_month, day_of_year, month, year);
 }
 
 bool Dispenser_is_last_dispenser(Dispenser* this) {
@@ -388,7 +404,9 @@ void Dispenser_printf(Dispenser* this, char* arg) {
 	char* product = Dispenser_get_product_name(this);
 	printf("Dispenser numéro %d : contient du %s, est rempli à %d %% et sa batterie est à %d %%\n", this->id, product, this->filling, this->battery);
 	if(strcmp(arg, "v") == 0) {
-		printf("Date dernier lavage : %d de l\' année %d\n", this->last_wash_date->current_day, this->last_wash_date->year);
+		printf("Date dernier lavage : %d-%d-%d -- %d-%d\n", 
+				this->last_wash_date->day_of_month, this->last_wash_date->month, this->last_wash_date->year, 
+				this->last_wash_date->day_of_year, this->last_wash_date->year);
 		if(this->message !=NULL){
 			printf("message en queue pour le dispenser : %s\n", this->message->message);
 		} else {
@@ -499,12 +517,13 @@ static void Dispenser_check_has_emitted(Dispenser* this) {
 }
 
 static void Dispenser_check_is_dirty(Dispenser* this) {
+	// TODO : à modifier
 	time_t rawtime;
 	struct tm * timeinfo;
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	int day_diff = timeinfo->tm_yday - this->last_wash_date->current_day;
+	int day_diff = timeinfo->tm_yday - this->last_wash_date->day_of_year;
 	int year_diff = timeinfo->tm_year - this->last_wash_date->year;
 
 	int total_day_diff = year_diff*365 + day_diff;
