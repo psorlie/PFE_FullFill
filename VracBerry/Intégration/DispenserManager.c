@@ -15,6 +15,7 @@
 #include "Proxy.h"
 #include "DispenserManager.h"
 #include "Postman.h"
+#include "Postman_UART.h"
 //#include "Translator.h"
 
 
@@ -353,12 +354,13 @@ static DispenserMqMsg DispenserManager_mq_receive() {
 
 
 static void *DispenserManager_run() {
-	//printf("je suis run\n");
+	printf("je suis run\n");
 	DispenserMqMsg msg;
 	Dispenser* this;
-	//printf("avt backup\n");
-	DispenserManager_read_backup();
-	//printf("après backup\n");
+	printf("avt backup\n");
+	//DispenserManager_read_backup();
+	DispenserManager_add_dispenser(1, "Cacahuètes", 52, 65);
+	printf("après backup\n");
 	DispenserManager_printf("");
 	while(dispenser_list->first_dispenser != NULL) {
 		msg = DispenserManager_mq_receive();
@@ -552,8 +554,10 @@ void DispenserManager_ask_detailed_dispenser(Dispenser_Id id) {
 
 
 void DispenserManager_ask_all_update() {
+	printf("je suis là");
 	Dispenser* current_dispenser = dispenser_list->first_dispenser;
 	while (current_dispenser != NULL) {
+		printf("bouh!");
 		DispenserManager_ask_update(current_dispenser);
 		current_dispenser = current_dispenser->next_dispenser;
 	}

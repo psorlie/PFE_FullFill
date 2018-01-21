@@ -38,7 +38,7 @@ static void parse_object(cJSON *root)
         perror ("message non géré : type pas un string");
     }
 
-    printf("type %s", type_str);
+    printf("type %s\n", type_str);
     
     if(strcmp(type_str, TYPE_ASK_DETAIL)==0){
         cJSON* id = cJSON_GetObjectItem(root, "id");
@@ -54,8 +54,6 @@ static void parse_object(cJSON *root)
     }
     else if(strcmp(type_str, TYPE_ASK_UPDATE)==0){
         printf("update\n");
-        usleep(1000000);
-        //Proxy_send_update(2, 40, "schniorf");
         DispenserManager_ask_all_update();
     }
     else if(strcmp(type_str, TYPE_ASK_NETWORK)==0){
