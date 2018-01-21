@@ -1,14 +1,19 @@
 
+/*************************************** Inclusion des fichiers js nécessaires ***************************************/
 function include(fileName){
   document.write("<script type='text/javascript' src='"+fileName+"'></script>" );
 }
 
 include("../js/mqttws31.js");
+include("../js/jquery-3.2.1.js");
 //src="jquery.min.js";
 include("../js/config.js");
 
+/*************************************** MQTT ***************************************/
+
 var mqtt;
 var reconnectTimeout = 2000;
+var array_displayed_dispenser = new Array(100);
 
 function MQTT_send(message){
     mqtt.send(TOPIC_ENVOI, message, QOS, false);
@@ -52,6 +57,7 @@ function onConnect() {
     mqtt.subscribe(TOPIC_RECEPTION, {qos: 1});
     console.log("topic : " + TOPIC_RECEPTION);
 
+    send_request_socket("ask_full_update");
     //MQTT_send("HaHaHaHa Merlin!");
 
 }
@@ -78,6 +84,13 @@ function onConnectionLost(response) {
       MQTTconnect();
   });
 
+
+/********************************************** Réception des JSON *******************************************/
+
+function add_button_to_array(id){
+  array_displayed_dispenser.push(id);
+}
+
 //function called everytime a socket is received
 function dispatch(data) {
   var msg = JSON.parse(data);
@@ -91,7 +104,14 @@ function dispatch(data) {
     // a update sent by the server
     case "update":
       console.log("j'ai reçu un update");
-      setUpdateButton(msg.id, msg.filling, msg.name);
+      if($.inArray(msg.id , array_displayed_dispenser) == -1){
+        addNewButton(msg.id, msg.filling, msg.name);
+        add_button_to_array(msg.id);
+      }
+      else{
+        //console.log("hého hého on rentre du boulot");
+        setUpdateButton(msg.id, msg.filling, msg.name);
+      }
     break;
     // server alert when a dispenser is dirty
     case "dirty_alert":
@@ -105,16 +125,18 @@ function dispatch(data) {
       console.log("j'ai reçu un network");
       setNetworkWindow(msg.sleep_time, msg.wake_up_time, msg.cycle_time, msg.cleaning_interval_day);
     break;
-
+/*
     case "new":
       console.log("j'ai reçu un nouveau dispenser");
       addNewButton(msg.id, msg.filling, msg.battery, msg.name);
     break;
-
+*/
     default:
       window.alert("c'est la merde, on recoit des types chelous");
   }
 }
+
+/********************************************* Envoi de JSON **********************************************/
 
 function send_request_socket(type) {
   var data = new Object();
@@ -154,6 +176,8 @@ function send_configuration_socket(type, sleep, wake, freq_msg, freq_clean) {
   console.log("envoi de" + string);
   MQTT_send(string);
 }
+
+/************************************************** Gestion de l'affichage ***********************************************/
 
 function change_window (current_window, new_window) {
   $("#" + current_window).css('display','none');
@@ -209,37 +233,55 @@ function issue_called(text_for_alert){
   window.alert(text_for_alert);
 }
 
-function addNewButton(id, filling, battery, name) {
+
+function changePage(id){
+  //console.log("heyyyy mon ami, est-ce que tu aimes les patates??");
+  send_socket_with_id("ask_detail", parseInt(id));
+  change_window("data_window", "detail_window");
+
+}
+
+
+function addNewButton(id, filling, name) {
   var last_line = $(".line").last();
   var new_button = ""
-  if(last_line.length() === 3){
-    $("#corps").append("<div class=\"line\"></div>");
-    last_line = $(".line").last();
-  }
-  var new_button = "<span class=\"space\"></span>";
-  new_button += "<button id = \"button_id" + id + "\" class=\"dispenser\">";
-  new_button += " ID : <span class=\"id_dispenser\">" + id + "</span><br/>"; // ID
-  new_button += " Remplissage : <span class=\"filling_dispenser\">" + filling + "</span><br/>"; // filling
-  new_button += "  Batterie : <span class=\"battery_dispenser\">" + battery + "</span><br/>"; // battery
-  new_button += " Produit : <span class=\"name_dispenser\">" + name + "</span></button><span class=\"space\"> </span>"; // name
+  //console.log(""+last_line.length);
+  //if(last_line.length === 3){
+    //$("#corps").append("<div class=\"line\"></div>");
+    //last_line = $(".line").last();
+  //}
+  id_display = "n°" + id;
+  filling += " %";
+  
+  var space = "<span class=\"space\"></span>";
+
+  var new_button = " <button id = \"button_" + id + "\" class=\"dispenser\" onclick = \"changePage("+id+")\">";
+  new_button += " <span class=\"id_dispenser\">" + id_display + "</span><br/>"; // ID
+  new_button += " <span class=\"name_dispenser\">" + name + "</span><br/>"; // name
+  new_button += " <span class=\"filling_dispenser\">" + filling + "</span></button>";//<span class=\"space\"> </span>"; // filling
+  //new_button += "  Batterie : <span class=\"battery_dispenser\">" + battery + "</span><br/>"; // battery
+  last_line.append(space);
   last_line.append(new_button);
 }
 
 //
 // Main function
 //
-$(".dispenser").each(function(){
+$('.dispenser').each(function(){
   var $this = $(this);
   parse_button($this);
-  console.log("je suis à jour");
 });
 
 
+/***************************************************** Gestion des clicks ******************************************/
+
 // called when the user click on a dispenser button
-$(".dispenser").click(function() {
+/*
+$('.dispenser').click(function() {
     send_socket_with_id("ask_detail", parseInt($(this).children(".id_dispenser").text()));
     change_window("data_window", "detail_window");
 });
+*/
 // called when the user click on the network configuration button
 $("#network_request").click(function() {
     send_request_socket("ask_network");
@@ -278,7 +320,6 @@ $("#send_cleaning_update").click(function() {
 
 // function called when the user want to send the new name of a product
 $("#send_name_update").click(function() {
-  //TODO   verify we get the value
   send_socket_with_id_and_name("name_update", parseInt($("#id_product").val()), $("#name_product").val());
   //change_window("detail_window", "data_window");
 });

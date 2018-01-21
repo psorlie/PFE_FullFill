@@ -19,6 +19,7 @@ ob_implicit_flush();
       <div id="corps">
         <div class="line">
         <?php
+        /*
         //$handle = @fopen("/opt/vrac-berry/backup_file.txt", "r");
         $handle = @fopen("../backup_file.txt", "r");
         if ($handle) {
@@ -43,6 +44,7 @@ ob_implicit_flush();
           }
           fclose($handle);
         }
+        */
          ?>
        </div>
       </div>

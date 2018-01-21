@@ -69,5 +69,14 @@ br {
 }
 
 .id_dispenser {
-  font:50%;
+  font-size:100%;
+}
+
+.name_dispenser {
+  font-size:200%;
+}
+
+.filling_dispenser{
+  font-size:200%;
+  font-weight: bold;
 }
