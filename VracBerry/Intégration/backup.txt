@@ -1,0 +1,1 @@
+id=12 battery=52 filling=85 product=noix day_of_month=1 day_of_year=1 month=1 year=2018 state=1
