@@ -18,7 +18,7 @@ var array_displayed_dispenser = new Array(100);
 function MQTT_send(message){
     mqtt.send(TOPIC_ENVOI, message, QOS, false);
 }
-  
+
 function MQTTconnect() {
     if (typeof path == "undefined") {
         path = "/mqtt";
@@ -187,7 +187,21 @@ function change_window (current_window, new_window) {
 function setDetailWindow(id, filling, battery, date, name){
   $("#id_product").val(id);
   $("#filling_data").text(filling);
+  if(filling > 20) {
+    $("#filling_data").css('background','#FF0000');
+  } elseif (filling > 5) {
+    $("#filling_data").css('background','orange');
+  } else {
+    $("#filling_data").css('background','red');
+  }
   $("#battery_data").text(battery);
+  if(filling > 20) {
+    $("#battery_data").css('background','#FF0000');
+  } elseif (filling > 5) {
+    $("#battery_data").css('background','orange');
+  } else {
+    $("#battery_data").css('background','red');
+  }
   $("#last_washing_date_data").text(date);
   $("#name_product").val(name);
   //console.log("ninja : " + $("#id_product").val(''+100) + " alors qu'on devrait avoir : " + id);
@@ -216,7 +230,7 @@ function parse_button(current_button){
   var filling = parseInt($(current_button).children('.filling_dispenser').text());
   var battery = parseInt($(current_button).children('.battery_dispenser').text());
 
-  if(filling < 20 || battery < 20){
+  if(filling < 20 || battery < 20) {
     $(current_button).css('background-color','orange');
     if (filling < 5) {
       $(current_button).css('background-color','red');
@@ -252,7 +266,7 @@ function addNewButton(id, filling, name) {
   //}
   id_display = "n°" + id;
   filling += " %";
-  
+
   var space = "<span class=\"space\"></span>";
 
   var new_button = " <button id = \"button_" + id + "\" class=\"dispenser\" onclick = \"changePage("+id+")\">";
