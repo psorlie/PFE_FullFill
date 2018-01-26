@@ -15,22 +15,22 @@ int main(){
 
 	Postman_UART_init();
 
-	DispenserManager_add_dispenser(1, "Cacahuètes", 52, 65);
+	DispenserManager_add_dispenser(1, "Cacahuètes", 40, 80);
 	//usleep(100);
 	//DispenserManager_received_message(1,20,10);
-	DispenserManager_add_dispenser(2, "Pistaches", 52, 65);
+	DispenserManager_add_dispenser(2, "Pistaches", 20, 60);
 	//usleep(100);
 	//DispenserManager_received_message(2,0,10);
-	DispenserManager_add_dispenser(3, "Riz", 52, 65);
+	DispenserManager_add_dispenser(3, "Riz", 50, 10);
 	//usleep(100);
 	//DispenserManager_received_message(3,20,10);
-	DispenserManager_add_dispenser(4, "Pâtes", 52, 65);
+	DispenserManager_add_dispenser(4, "Pâtes", 70, 20);
 	//usleep(100);
 	//DispenserManager_received_message(4,20,0);
-	DispenserManager_add_dispenser(5, "Lentilles", 52, 65);
+	DispenserManager_add_dispenser(5, "Lentilles", 100, 100);
 	//usleep(100);
 	//DispenserManager_received_message(5,20,10);
-	DispenserManager_add_dispenser(6, "Millet", 52, 65);
+	DispenserManager_add_dispenser(6, "Millet", 50, 0);
 	//usleep(100);
 	//DispenserManager_received_message(6,20,10);
 

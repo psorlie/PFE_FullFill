@@ -26,6 +26,14 @@ int uart0_filestream = -1;
 static char rx_buffer[15];
 static pthread_t postman_uart_thread;
 
+static const char *SerialPath[] =
+      {		"/dev/ttyUSB0",
+      		"/dev/ttyUSB1",
+      		"/dev/ttyUSB0",
+      		"/dev/ttyUSB1"
+	   };
+static int SelectedSerialPath;
+
 /*
 int main(){
 	Postman_UART_init();
@@ -36,6 +44,8 @@ int main(){
 	return 0;
 }
 */
+
+
 
 void Postman_UART_init(){
 	//-------------------------
@@ -55,11 +65,27 @@ void Postman_UART_init(){
 	//											immediately with a failure status if the output can't be written immediately.
 	//
 	//	O_NOCTTY - When set and path identifies a terminal device, open() shall not cause the terminal device to become the controlling terminal for the process.
-	uart0_filestream = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);		//Open in non blocking read/write mode
-	if (uart0_filestream == -1)
+
+
+	SelectedSerialPath = 0;
+
+	do
 	{
-		//ERROR - CAN'T OPEN SERIAL PORT
-		printf("Error - Unable to open UART.  Ensure it is not in use by another application\n");
+		uart0_filestream = open(SerialPath[SelectedSerialPath], O_RDWR | O_NOCTTY | O_NDELAY);		//Open in non blocking read/write mode
+		printf("tried to open %s\n", SerialPath[SelectedSerialPath]);
+		if (uart0_filestream == -1)
+		{	
+			//ERROR - CAN'T OPEN SERIAL PORT
+			SelectedSerialPath++;
+			//printf("Error - Unable to open UART.  Ensure it is not in use by another application\n");
+		}
+	}
+	while ( (uart0_filestream == -1) && (SelectedSerialPath < sizeof (SerialPath) / sizeof(char*)));
+
+	if(uart0_filestream == -1)
+	{
+		perror("Unable to open UART - Exit");
+		exit(-2);
 	}
 	
 	//CONFIGURE THE UART
