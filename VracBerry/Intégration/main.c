@@ -15,7 +15,7 @@ int main(){
 
 	Postman_UART_init();
 
-	DispenserManager_add_dispenser(1, "Cacahuètes", 40, 80);
+	DispenserManager_add_dispenser(1, "Farine", 40, 80);
 	//usleep(100);
 	//DispenserManager_received_message(1,20,10);
 	DispenserManager_add_dispenser(2, "Pistaches", 20, 60);

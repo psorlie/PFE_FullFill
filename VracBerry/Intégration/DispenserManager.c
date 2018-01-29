@@ -158,7 +158,7 @@ Dispenser* DispenserManager_get_list(){
 
 Dispenser* DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {
-		printf("initialisation\n");
+		printf("initialisation de la liste chaînée\n");
 		dispenser_list = DispenserManager_initialisation();
 	}
 	assert(dispenser_list != NULL);
@@ -286,7 +286,7 @@ static void DispenserManager_read_backup() {
 			if (fscanf(file_identifier, "id=%" SCNu8 " battery=%" SCNu8 " filling=%" SCNu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d", 
 										&id, &battery, &filling, product, &day_of_month, &day_of_year, &month, &year, &state))
 			{
-				printf("id=%" PRIu8 " battery=%" PRIu8 " filling=%" PRIu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d", 
+				printf("id=%" PRIu8 " battery=%" PRIu8 " filling=%" PRIu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d\n", 
 										id, battery, filling, product, day_of_month, day_of_year, month, year, state);
 				DispenserManager_add_dispenser_from_backup(id, product, battery, filling, day_of_month, day_of_year, month, year, state);
 			} else {
