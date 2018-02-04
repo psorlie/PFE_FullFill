@@ -25,10 +25,6 @@
 
 #define DEFAULT_PRODUCT_NAME "XXXXX"
 
-#define PRODUCT_REPEAT "repeat"
-
-#define PRODUCT_BROKEN "broken"
-
 /**
  * @def Product struct definition and what is inside
  */

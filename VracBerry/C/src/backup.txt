@@ -1,0 +1,7 @@
+id=12 battery=50 filling=80 product=Noix day_of_month=1 day_of_year=1 month=1 year=2018 state=1
+id=1 battery=20 filling=60 product=Cacahuètes day_of_month=1 day_of_year=1 month=1 year=2018 state=1
+id=2 battery=50 filling=10 product=Pistaches day_of_month=1 day_of_year=1 month=1 year=2018 state=1
+id=3 battery=70 filling=20 product=Riz day_of_month=1 day_of_year=1 month=1 year=2018 state=1
+id=4 battery=100 filling=100 product=Pâtes day_of_month=1 day_of_year=1 month=1 year=2018 state=1
+id=5 battery=0 filling=50 product=Lentilles day_of_month=1 day_of_year=1 month=1 year=2018 state=1
+id=6 battery=40 filling=0 product=Millet day_of_month=1 day_of_year=1 month=1 year=2018 state=1

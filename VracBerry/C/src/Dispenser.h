@@ -1,6 +1,8 @@
 /*
  * Dispenser.h
  *
+ * This module is used to manipulate a dispenser and run his SM
+ *
  *  Created on: 12 nov. 2017
  *      Author: sorlie
  */
@@ -16,12 +18,17 @@
 #include "Date.h"
 #include "Product.h"
 #include "MessageToSend.h"
+#include "DispenserManager.h" // is used because the Dispenser will call DM function to generate event
+							// for himself in case of pseudo-state transition
 
 #define MESSAGE_TO_SEND_SIZE (20)
 #define DATE_SIZE (10)
-#define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
 #define MAX_COUNT_INVALID_MESSAGE (5)
 #define MAX_COUNT_LOST_MESSAGE (5)
+
+
+/********************************************* Déclaration des types **************************************/
+
 
 typedef uint8_t Battery;
 typedef uint8_t Filling;
@@ -45,6 +52,7 @@ typedef enum DispenserState_t {
 
 typedef enum {
 	E_SET_NEW_PRODUCT_NAME = 0,
+	E_SET_CURRENT_DATE,
 	E_RECEIVED_MESSAGE,
 	E_END_OF_THE_DAY,
 	E_HAS_EMITTED,
@@ -66,6 +74,7 @@ typedef enum DispenserAction {
 	A_NOP = 0,
 	A_MORNING,
 	A_SET_NEW_PRODUCT_NAME,
+	A_SET_CURRENT_DATE,
 	A_RECEIVED_MESSAGE,
 	A_LOST_ANSWER,
 	A_BROKEN_ANSWER,
@@ -93,6 +102,10 @@ typedef struct {
 	Filling filling;
 } BatteryAndFilling;
 
+/**
+ * @def the data transmitted can be the battery and the filling (from the dispenser) or a product name (from
+ * an user).
+ */
 typedef union {
 	BatteryAndFilling battery_and_filling;
 	char product [PRODUCT_SIZE];
@@ -109,8 +122,14 @@ typedef union {
 	DispenserMqMsg data;
 } DispenserMqMsgAdapter;
 
-typedef struct Dispenser_t Dispenser;
+//typedef struct Dispenser_t Dispenser;
 
+struct Dispenser_t;
+
+typedef struct Dispenser_t Dispenser;
+/**
+ * @def A dispenser contain everything necessary about him, and a pointer to the next dispenser inside the list.
+ */
 struct Dispenser_t {
 	Dispenser_Id id;
 	Filling filling;
@@ -120,49 +139,117 @@ struct Dispenser_t {
 	Is_Lost is_lost;
 	Product* product;
 	Date* last_wash_date;
-	Dispenser* next_dispenser;
+	struct Dispenser_t* next_dispenser;
 	MessageToSend* message;
 };
 
-extern Dispenser* Dispenser_create(Dispenser_Id, char*, Battery, Filling);
 
-extern Product* Dispenser_get_product(Dispenser*);
+/******************************************* get ******************************************/
 
-extern Battery Dispenser_get_battery(Dispenser*);
 
-extern Dispenser_Id Dispenser_get_id(Dispenser*);
+extern Product* 		Dispenser_get_product(Dispenser*);
 
-extern Filling Dispenser_get_filling(Dispenser*);
+extern Battery 			Dispenser_get_battery(Dispenser*);
 
-extern void Dispenser_set_product(Dispenser*, char*);
+extern Dispenser_Id 	Dispenser_get_id(Dispenser*);
 
-extern void Dispenser_set_battery(Dispenser*, Battery);
+extern Filling 			Dispenser_get_filling(Dispenser*);
 
-extern void Dispenser_set_id(Dispenser*, Dispenser_Id);
+extern Date* 			Dispenser_get_last_wash_date(Dispenser*);
 
-extern void Dispenser_set_filling(Dispenser*, Filling);
+extern int 				Dispenser_get_day_of_month(Dispenser*);
 
-extern void Dispenser_set_current_date(Dispenser*);
+extern int 				Dispenser_get_day_of_year(Dispenser*);
 
-extern void Dispenser_destroy(Dispenser*);
+extern int 				Dispenser_get_month(Dispenser*);
 
-extern int Dispenser_get_day(Dispenser*);
+extern int 				Dispenser_get_year(Dispenser*);
 
-extern int Dispenser_get_year(Dispenser*);
+extern char* 			Dispenser_get_product_name(Dispenser*);
 
-extern char* Dispenser_get_product_name(Dispenser*);
+extern uint8_t 			Dispenser_get_product_size(Dispenser*);
 
-extern uint8_t Dispenser_get_product_size(Dispenser*);
+extern MessageToSend* 	Dispenser_get_message(Dispenser*);
 
-extern MessageToSend* Dispenser_get_message(Dispenser*);
 
-extern void Dispenser_printf(Dispenser*, char*);
+/******************************************* set ******************************************/
 
-extern void Dispenser_run(Dispenser*, DispenserMqMsg);
 
-extern Dispenser* Dispenser_detected(Dispenser_Id, Battery, Filling);
+extern void 			Dispenser_set_product(Dispenser*, char*);
 
-extern void Dispenser_set_specified_date(Dispenser*, int, int);
+extern void				Dispenser_set_battery(Dispenser*, Battery);
+
+extern void 			Dispenser_set_id(Dispenser*, Dispenser_Id);
+
+extern void				Dispenser_set_filling(Dispenser*, Filling);
+
+extern void 			Dispenser_set_current_date(Dispenser*);
+
+extern void 			Dispenser_set_message(Dispenser*, MessageToSend*);
+
+extern void 			Dispenser_set_specified_date(Dispenser*, int, int, int, int);
+
+
+/******************************************* méthodes *******************************************/
+
+/**
+ * @brief This function will create a new dispenser (by malloc-ing the necessary memory size). and setting the
+ * values in it and setting other to null/default value.
+ *
+ * @param[in] Dispenser_Id, id of the newly created dispenser
+ *
+ * @param[in] char*, name of the product inside the dispenser
+ *
+ * @param[in] Battery, battery level of the dispenser
+ *
+ * @param[in] Filling, filling level of the dispenser
+ *
+ * @return Dispenser*, pointer of the newly created dispenser
+ */
+extern Dispenser* 		Dispenser_create(Dispenser_Id, char*, Battery, Filling);
+
+/**
+ * @brief This function is used to print the information about the dispenser. Use the 'v' char as an attribute
+ * for detailed information, anything else will just print basic data.
+ *
+ * @param[in] Dispenser*, pointer to the asked dispenser
+ *
+ * @param[in] char*, text for verbose (or not) data
+ */
+extern void 			Dispenser_printf(Dispenser*, char*);
+
+/**
+ * @brief This function is called with the right Dispenser* by the DispenserManager, it will get the right
+ * action from the current state of the dispenser and the event in the MQ message to call the right function
+ *
+ * @param[in] Dispenser* pointer to the called dispenser for the action
+ *
+ * @param[in] DispenserMqMsg, MQ message containing the event and other data for the action
+ */
+extern void 			Dispenser_run(Dispenser*, DispenserMqMsg);
+
+/**
+ * @brief This funciton is called whenever the Manager get a message from a dispenser and cant find
+ * the corresponding dispenser (same id), it will call this function to create a new dispenser in the list
+ * It's basically the same as Dispenser_create, but without any product.
+ *
+ * @param[in] Dispenser_Id, id of the newly created dispenser
+ *
+ * @param[in] Battery, battery level of the dispenser
+ *
+ * @param[in] Filling, filling level of the dispenser
+ *
+ * @return Dispenser*, pointer to the new dispenser
+ */
+extern Dispenser* 		Dispenser_detected(Dispenser_Id, Battery, Filling);
+
+/**
+ * @brief This function is called when we want to free a dispenser from the list
+ * it will call the destroy of all the object inside it, reset itself then free.
+ *
+ * @param[in] Dispenser*, pointer to the to-be destroyed dispenser.
+ */
+extern void 			Dispenser_destroy(Dispenser*);
 
 
 #endif /* SRC_DISPENSER_H_ */
