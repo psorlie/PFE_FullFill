@@ -12,6 +12,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-void Translator_send_message(uint8_t, char*);
+/**
+ * @brief This function is called to send a text from the postman_uart to the dispenserManager.
+ *
+ * @param[in] char*, pointer to the text received by the UART.
+ */
+extern void Translator_send_to_server(char*);
 
 #endif /* SRC_TRANSLATOR_H_ */

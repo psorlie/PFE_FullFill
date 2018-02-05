@@ -45,6 +45,15 @@ static void Product_free(Product*);
  */
 static uint8_t Product_set_size(char*);
 
+/**
+ * @brief This function will set the name of the Product inside the struct.
+ *
+ * @param[in] Product*, pointer to the product to set
+ *
+ * @param[in] char*, pointer to the name of the product.
+ *
+ * @retval Product*, the same as in input, but why not.
+ */
 static Product* Product_set_name(Product*, char*);
 
 /*************************************************

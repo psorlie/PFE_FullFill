@@ -9,10 +9,21 @@
 
 #include "MessageToSend.h"
 
-static char* BASIC_ACK = "ack";
+/**
+ * @def the default ack message
+ */
+static const char* BASIC_ACK = "ack";
 
-static char* BASIC_REPEAT = "repeat";
+/**
+ * @def the default repeat message
+ */
+static const char* BASIC_REPEAT = "repeat";
 
+/**
+ * @brief This function is called to free the MessageToSend after sending it.
+ *
+ * @param[in] MessageToSend*, pointer to the message to free.
+ */
 static void MessageToSend_free(MessageToSend*);
 
 bool MessageToSend_exist(MessageToSend* this) {
@@ -26,7 +37,7 @@ void MessageToSend_destroy(MessageToSend* this) {
 }
 
 MessageToSend* MessageToSend_get_acknowledge_message() {
-	MessageToSend* message;
+	MessageToSend* message = (MessageToSend*)malloc(sizeof(MessageToSend));
 	message->message = BASIC_ACK;
 	return message;
 }
@@ -36,7 +47,7 @@ static void MessageToSend_free(MessageToSend* this) {
 }
 
 MessageToSend* MessageToSend_get_repeat_message() {
-	MessageToSend* message;
+	MessageToSend* message = (MessageToSend*)malloc(sizeof(MessageToSend));
 	message->message = BASIC_REPEAT;
 	return message;
 }

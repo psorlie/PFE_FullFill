@@ -158,7 +158,7 @@ Dispenser* DispenserManager_get_list(){
 
 Dispenser* DispenserManager_add_dispenser(Dispenser_Id id, char* product, Battery battery, Filling filling) {
 	if(dispenser_list == NULL) {
-		printf("initialisation\n");
+		printf("initialisation de la liste chaînée\n");
 		dispenser_list = DispenserManager_initialisation();
 	}
 	assert(dispenser_list != NULL);
@@ -276,23 +276,24 @@ static void DispenserManager_read_backup() {
 	int pos_init = 0;
 	bool is_not_over = true;
 	if((file_identifier = fopen("backup.txt", "rw+")) == NULL) {
+		perror("Problème d'ouverture du fichier de backup");
 		DispenserManager_add_dispenser(0, DEFAULT_PRODUCT_NAME, 100, 100);		// TODO : pourquoi??
 	} else {
 		if(pos_init) {
 			fsetpos(file_identifier, &pos);
 		}
-		while(is_not_over) {
-			//printf("ggg\n");
-			if (fscanf(file_identifier, "id=%" PRIu8 " battery=%" PRIu8 " filling=%" PRIu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d", 
-										&id, &battery, &filling, product, &day_of_month, &day_of_year, &month, &year, &state)) {
+		while((!feof(file_identifier)) && (is_not_over)) {
+			if (fscanf(file_identifier, "id=%" SCNu8 " battery=%" SCNu8 " filling=%" SCNu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d", 
+										&id, &battery, &filling, product, &day_of_month, &day_of_year, &month, &year, &state))
+			{
+				printf("id=%" PRIu8 " battery=%" PRIu8 " filling=%" PRIu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d\n", 
+										id, battery, filling, product, day_of_month, day_of_year, month, year, state);
 				DispenserManager_add_dispenser_from_backup(id, product, battery, filling, day_of_month, day_of_year, month, year, state);
-				fgetpos(file_identifier, &pos);
-				pos_init = pos_init + 1;
-				//printf("id=%" PRIu8 "battery=%" PRIu8 " filling=%" PRIu8 " product=%s day_of_month=%d day_of_year=%d month=%d year=%d state=%d", 
-					//id, battery, filling, product, day_of_month, day_of_year, month, year, state);
 			} else {
 				is_not_over = false;
 			}
+			fgetpos(file_identifier, &pos);
+			pos_init = pos_init + 1;
 		}
 	}
 	fclose(file_identifier);
@@ -354,18 +355,15 @@ static DispenserMqMsg DispenserManager_mq_receive() {
 
 
 static void *DispenserManager_run() {
-	printf("je suis run\n");
+	printf("Lancement de la tâche DispenserManager\n");
 	DispenserMqMsg msg;
 	Dispenser* this;
-	printf("avt backup\n");
-	//DispenserManager_read_backup();
-	DispenserManager_add_dispenser(1, "Cacahuètes", 52, 65);
-	printf("après backup\n");
-	DispenserManager_printf("");
+	DispenserManager_read_backup();
+	//DispenserManager_add_dispenser(1, "Cacahuètes", 52, 65);
+	//DispenserManager_printf("");
 	while(dispenser_list->first_dispenser != NULL) {
 		msg = DispenserManager_mq_receive();
 		this = DispenserManager_find_dispenser(msg.id);
-		printf("id %d\n", msg.id);
 		Dispenser_printf(this, "");
 		if(this != NULL) {
 			Dispenser_run(this, msg);
@@ -554,10 +552,8 @@ void DispenserManager_ask_detailed_dispenser(Dispenser_Id id) {
 
 
 void DispenserManager_ask_all_update() {
-	printf("je suis là");
 	Dispenser* current_dispenser = dispenser_list->first_dispenser;
 	while (current_dispenser != NULL) {
-		printf("bouh!");
 		DispenserManager_ask_update(current_dispenser);
 		current_dispenser = current_dispenser->next_dispenser;
 	}

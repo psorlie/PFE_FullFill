@@ -1,4 +1,7 @@
-
+/**
+ * Well, everything was taken from stack overflow, with just a few modification.
+ * You should go instead for IRQ interruption.
+ */
 #include <stdio.h>
 #include <unistd.h>			//Used for UART
 #include <fcntl.h>			//Used for UART
@@ -26,6 +29,9 @@ int uart0_filestream = -1;
 static char rx_buffer[15];
 static pthread_t postman_uart_thread;
 
+/**
+ * @def the same serial path are defined twice, 'cause it seems like it can not work once.
+ */
 static const char *SerialPath[] =
       {		"/dev/ttyUSB0",
       		"/dev/ttyUSB1",
@@ -33,6 +39,52 @@ static const char *SerialPath[] =
       		"/dev/ttyUSB1"
 	   };
 static int SelectedSerialPath;
+
+/**
+ * @brief This function is called at the end of the init, to create the thread that will listen to the UART.
+ */
+static void Postman_UART_run();
+
+/**
+ * @brief This function is called by the listening thread on the UART it poll on the UART, and act when there
+ * is data to read.
+ */
+static void Postman_UART_read();
+
+/**
+ * @brief This function is called when we need to transform a decimal number in binary (O-1 in a text) ?
+ *
+ * @Depreciated
+ *
+ * @param[in] int the decimal number to transform
+ *
+ * @return char* pointer to the text (0/1)
+ */
+static char* Postman_UART_decimal_to_binary(int);
+
+/**
+ * @brief This function is called when we want to transform a binary in a int. Don't know how it works or
+ * if it works.
+ *
+ * @Depreciated
+ *
+ * @param[in] char, the binary ?
+ *
+ * @return int, the decimal number
+ */
+static int Postman_UART_binaryToDecimal(char);
+
+/**
+ * @brief This function is called when we want to transform a binary in a int. Don't know how it works or
+ * if it works. It works better than the one before at least.
+ *
+ * @Depreciated
+ *
+ * @param[in] char, the binary ?
+ *
+ * @return int, the decimal number
+ */
+static int Postman_UART_bin2int(const char*);
 
 /*
 int main(){
@@ -141,7 +193,7 @@ void Postman_UART_close(){
 	close(uart0_filestream);
 }
 
-void Postman_UART_read(){
+static void Postman_UART_read(){
 	//----- CHECK FOR ANY RX BYTES -----
 	if (uart0_filestream != -1)													// Si UART open
 	{
@@ -180,7 +232,8 @@ void Postman_UART_read(){
 					printf("FINAL : %u, %u, %u\n", id, filling, battery);
 					DispenserManager_add_dispenser((Dispenser_Id)id, "Bloup", (Battery)battery, (Filling)filling);
 				}
-				else{
+				else
+				{
 					printf("%s\n", rx_buffer);
 					perror ("Pas de début de message détecté");
 				}
@@ -190,7 +243,7 @@ void Postman_UART_read(){
 }
 
 
-void Postman_UART_run(){
+static void Postman_UART_run(){
 	//printf("bonjour mon ami, est-ce que tu aimes les patates?");
 	//unsigned char rx_buffer[1];
 	//int decVal;
@@ -248,8 +301,7 @@ void Postman_UART_run(){
 
 
 
-char *decimal_to_binary(int n)
-{
+static char *Postman_UART_decimal_to_binary(int n) {
    int c, d, count;
    char *pointer;
  
@@ -288,7 +340,7 @@ char *decimal_to_binary(int n)
     return decimalnum;
 }*/
 
-int binaryToDecimal(char bin){
+static int Postman_UART_binaryToDecimal(char bin) {
 	//char bin; int dec = 0;
 	//char bin = 0;
 	//int dec = 0;
@@ -305,8 +357,7 @@ int binaryToDecimal(char bin){
 }
 
 
-int bin2int(const char *bin) 
-{
+static int Postman_UART_bin2int(const char *bin) {
     int i, j;
     j = sizeof(int)*8;
     while ( (j--) && ((*bin=='0') || (*bin=='1')) ) {

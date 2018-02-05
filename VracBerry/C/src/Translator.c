@@ -7,8 +7,10 @@
 
 #include "Translator.h"
 
-void Translator_send_message(uint8_t id, char* message) {
-	char perror_message [1000];
-	sprintf(perror_message, "message pour %d - %s", id, message);
-	perror(perror_message);
+
+void Translator_send_to_server(char* message){				// message : [id/filling/battery] 1 caractère par donnée
+	int id, filling, battery;
+	sscanf(message, "[%d/%d/%d]", &id, &filling, &battery);
+	printf("FINAL : %d, %d, %d\n", id, filling, battery);
+	DispenserManager_add_dispenser(Dispenser_Id, "Bloup", Battery, Filling);
 }

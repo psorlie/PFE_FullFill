@@ -10,15 +10,23 @@
 
 /******************************** libmosquitto ******************************/
 
-#define QOS				1 				// 0 -> no ACK ;	 1 -> 1 ACK ; 	2 -> 4-stage handshake
+#define QOS				1 					// 0 -> no ACK ;	 1 -> 1 ACK ; 	2 -> 4-stage handshake
 
-#define TOPIC_C2JS		"c2js" 		// VracBerry sending to UI
-#define TOPIC_JS2C		"js2c"		// UI sending to VracBerry
+#define TOPIC_SEND		"c2js"	 			// VracBerry sending to UI
+#define TOPIC_RECEIVE	"js2c"				// UI sending to VracBerry
 
-#define HOST 			"localhost" 	// IP address of the broker
-#define PORT 			1883 			// MQTT port of the broker
-#define KEEPALIVE 		60 				// Maximum connection time
-#define CLEAN_SESSION 	TRUE			// FALSE -> keep topic subscriptions after disconnect ; 	TRUE -> don't keep subscriptions
+#define HOST 			"localhost" 		// IP address of the broker
+#define PORT 			1883 				// MQTT port of the broker
+#define KEEP_ALIVE 		60 					// Maximum connection time
+#define CLEAN_SESSION 	true				// FALSE -> keep topic subscriptions after disconnect
+#define RETAIN			false 				// TRUE -> keep messages in the memory (be careful tu erase it after reception)
+
+#define TYPE_ASK_DETAIL		"ask_detail"
+#define TYPE_ASK_UPDATE		"ask_full_update"
+#define TYPE_ASK_NETWORK	"ask_network"
+#define TYPE_CLEAN_UPDATE	"cleaning_update"
+#define TYPE_NAME_UPDATE	"name_update"
+#define TYPE_NETWORK_UPDATE	"network_update"
 
 
 extern void Postman_init();

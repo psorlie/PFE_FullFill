@@ -11,6 +11,34 @@
 #include "DispenserManager.h"
 #include "Dispenser.h"
 
+/**
+ * @brief is called when the user ask the current value of a dispenser and it gets its return.
+ * Should also be called when this dispenser is updated (physically or virtually like a new product name
+ * but it's not :/
+ *
+ * @param[in] Dispenser* pointer of the asked dispenser
+ */
+void Application_send_update(Dispenser*);
+
+/**
+ * @brief is called when a new dispenser is lit and we receive its first msg.
+ * should create a new button and ask for a a new product name on the IHM : the new name isn't implemented
+ *
+ * @param[in] Dispenser* pointer of the new dispenser
+ */
+void Application_send_new(Dispenser*);
+
+/**
+ * @brief is called when the user ask the detail about a specified dispenser and we return it.
+ *
+ * @param[in] Dispenser* pointer of the specified dispenser
+ */
+void Application_send_detail(Dispenser*);
+
+/**************************************************************
+ * Still not implemented - some cleaning in the header is due *
+ **************************************************************/
+//TODO : clean the header, some functions are probably useless
 extern void Application_display_all_dispenser(Dispenser*);
 
 extern void Application_update_dispenser(Dispenser*);

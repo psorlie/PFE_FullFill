@@ -1,18 +1,20 @@
-
-/********************************** Mosquitto MQTT **************************************/
-
 #include <stdio.h>
 #include <string.h>
 #include <mosquitto.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <unistd.h>
 #include "Postman.h"
-//#include "Dispatcher.h"
+#include "cJSON.h"
+#include "math.h"
+//#include "Proxy.h"
+#include "DispenserManager.h"
 
 struct mosquitto *mosq = NULL;
 
 void Postman_send(char* message)
 {
-    mosquitto_publish(mosq, NULL, TOPIC_C2JS, strlen(message), message, QOS, false);
+    mosquitto_publish(mosq, NULL, TOPIC_SEND, strlen(message), message, QOS, RETAIN);
 }
 
 // Start listen thread
@@ -26,13 +28,125 @@ void Postman_listen_stop()
     mosquitto_loop_stop(mosq, true);
 }
 
+static void parse_object(cJSON *root)
+{
+    cJSON* type = cJSON_GetObjectItem(root, "type");
+    char* type_str = "";
+    if(cJSON_IsString(type)){
+        type_str = type -> valuestring;
+    } else {
+        perror ("message non géré : type pas un string");
+    }
+
+    printf("type %s\n", type_str);
+    
+    if(strcmp(type_str, TYPE_ASK_DETAIL)==0){
+        cJSON* id = cJSON_GetObjectItem(root, "id");
+        int id_int = 0;
+        if(cJSON_IsNumber(id)){
+            id_int = id -> valueint;
+        } else {
+            perror ("message non géré : id pas un int");
+        }
+
+        printf("détail, %d\n", id_int);
+        DispenserManager_ask_detailed_dispenser(id_int);
+    }
+    else if(strcmp(type_str, TYPE_ASK_UPDATE)==0){
+        printf("update\n");
+        DispenserManager_ask_all_update();
+    }
+    else if(strcmp(type_str, TYPE_ASK_NETWORK)==0){
+        printf("network\n");
+        //Proxy_send_network("10:30", "12:30", 30, 31);
+        // Appel de la fonction dans Network Manager
+    }
+    else if(strcmp(type_str, TYPE_CLEAN_UPDATE)==0){
+        cJSON* id = cJSON_GetObjectItem(root, "id");
+        int id_int = 0;
+        if(cJSON_IsNumber(id)){
+            id_int = id -> valueint;
+        } else {
+            perror ("message non géré : id pas un int");
+        }
+
+        printf("clean, %d\n", id_int);
+        DispenserManager_prepare_set_current_date(id_int);
+    }
+    else if(strcmp(type_str, TYPE_NAME_UPDATE)==0){
+        cJSON* id = cJSON_GetObjectItem(root, "id");
+        int id_int = 0;
+        if(cJSON_IsNumber(id)){
+            id_int = id -> valueint;
+        } else {
+            perror ("message non géré : id pas un int");
+        }
+
+        cJSON* name = cJSON_GetObjectItem(root, "name");
+        char* name_str = "";
+        if(cJSON_IsString(name)){
+            name_str = name -> valuestring;
+        } else {
+            perror ("message non géré : name pas un string");
+        }
+
+        printf("détail, %d, %s\n", id_int, name_str);
+        DispenserManager_prepare_set_new_product_name(id_int, name_str);
+    }
+    else if(strcmp(type_str, TYPE_NETWORK_UPDATE)==0){
+        cJSON* sleep_time = cJSON_GetObjectItem(root, "sleep_time");
+        char* sleep_time_str = "";
+        if(cJSON_IsString(sleep_time)){
+            sleep_time_str = sleep_time -> valuestring;
+        } else {
+            perror ("message non géré : sleep_time pas un string");
+        }
+
+        cJSON* wake_up_time = cJSON_GetObjectItem(root, "wake_up_time");
+        char* wake_up_time_str = "";
+        if(cJSON_IsString(wake_up_time)){
+            wake_up_time_str = wake_up_time -> valuestring;
+        } else {
+            perror ("message non géré : wake_up_time pas un string");
+        }
+
+        cJSON* cycle_time = cJSON_GetObjectItem(root, "cycle_time");
+        char* cycle_time_str = "";
+        if(cJSON_IsString(cycle_time)){
+            cycle_time_str = cycle_time -> valuestring;
+        } else {
+            perror ("message non géré : cycle_time pas un string");
+        }
+        
+        cJSON* cleaning_interval_day = cJSON_GetObjectItem(root, "cleaning_interval_day");
+        char* cleaning_interval_day_str = "";
+        if(cJSON_IsString(cleaning_interval_day)){
+            cleaning_interval_day_str = cleaning_interval_day -> valuestring;
+        } else {
+            perror ("message non géré : cleaning_interval_day pas un string");
+        }
+        
+        printf("network, %s, %s, %s, %s\n", sleep_time_str, wake_up_time_str, cycle_time_str, cleaning_interval_day_str);
+        // Appel de la fonction dans Network Manager
+    }
+    else
+        perror("message non géré : type de JSON inconnu");
+}
+
+static void Postman_dispatch(const struct mosquitto_message *message){
+    cJSON *msg = NULL;
+    msg = cJSON_Parse(message->payload);
+    parse_object(msg);
+}
+
 // Callback of message reception
-void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
+static void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
     //printf("réception de message : ");
     if(message->payloadlen){
         printf("%s %s\n", message->topic, (char *)message->payload);
         //Dispatcher_dispatch(message->payload);							//TODO : create dispatcher
+        Postman_dispatch(message);
     }else{
         printf("%s (null)\n", message->topic);
     }
@@ -40,12 +154,12 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
 }
 
 // Callback called when the mosquitto client connects
-void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
+static void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
 {
     if(!result){
         // Subscribe to broker information topics on successful connect.
         //mosquitto_subscribe(mosq, NULL, TOPIC_C2JS, QOS);
-        mosquitto_subscribe(mosq, NULL, TOPIC_JS2C, QOS);
+        mosquitto_subscribe(mosq, NULL, TOPIC_RECEIVE, QOS);
         // mosquitto_subscribe(mosq, NULL, "$SYS/#", QOS);		// Subscribe to all broker messages
     }else{
         fprintf(stderr, "Connect failed\n");
@@ -53,7 +167,7 @@ void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
 }
 
 // Callcack called each time the client subscribes to a new subject
-void my_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
+static void my_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos)
 {
     int i;
 
@@ -65,7 +179,7 @@ void my_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int 
 }
 
 // Callback for log messages
-void my_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
+static void my_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str)
 {
     // Print all log messages regardless of level.
     printf("%s\n", str);
@@ -81,20 +195,25 @@ int keepalive = 60;
 bool clean_session = true;
 */
     // Mosquitto init
+    //printf("début d'init");
     mosquitto_lib_init();
+    //printf("init lib OK");
     mosq = mosquitto_new(NULL, CLEAN_SESSION, NULL);
     if(!mosq){
         fprintf(stderr, "Error: Out of memory.\n");
     }
+    //printf("nouveau mosquitto OK");
     mosquitto_log_callback_set(mosq, my_log_callback);
     mosquitto_connect_callback_set(mosq, my_connect_callback);
     mosquitto_message_callback_set(mosq, my_message_callback);
     mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
+    //printf("callbacks OK");
 
     // Connection to the broker
     if(mosquitto_connect(mosq, HOST, PORT, KEEP_ALIVE)){
         fprintf(stderr, "Unable to connect.\n");
     }
+    //printf("connect OK");
 }
 
 // Destruction of the MQTT client
@@ -102,226 +221,3 @@ void Postman_destroy(){
     mosquitto_destroy(mosq);
     mosquitto_lib_cleanup();
 }
-
-
-/********************************** Libwebsockets **************************************/
-/*
-
-// Dans ce fichier, il faut modifier les callbacks d'envoi et de réception des données ainsi que le main
-
-#include <libwebsockets.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <mqueue.h>
-#include <signal.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stddef.h>
-#include <time.h>
-
-#include "Postman.h"
-
-static struct lws *web_socket = NULL;
-
-static pthread_t postman_thread;
-
-
-#define EXAMPLE_RX_BUFFER_BYTES (4)
-
-static PostmanMqMsg Postman_mq_receive();
-
-static void Postman_mq_send(PostmanMqMsg);
-
-static void* Postman_run();
-
-static void Postman_mq_send(PostmanMqMsg msg) {
-	int check;
-	PostmanMqMsgAdapter msg_adapter;
-	mqd_t mail_queue;
-	msg_adapter.data = msg;
-	mail_queue = mq_open(MQ_POSTMAN_NAME, O_WRONLY);
-	if(mail_queue <= -1) {
-		perror("[Postman] - Couldn\'t open the postman MQ\n");
-		strcpy(msg_adapter.buffer, "\0\0");
-	} else {
-		check = mq_send(mail_queue, msg_adapter.buffer, sizeof(msg_adapter.buffer), 0);
-		if (check <= -1) {
-			perror("[Postman] - Couldn\'t write in the MQ\n");
-		}
-	}
-	check = mq_close(mail_queue);
-}
-
-
-static PostmanMqMsg Postman_mq_receive() {
-	struct timespec default_mq_reading_timeout;
-	clock_gettime(CLOCK_REALTIME, &default_mq_reading_timeout);
-	default_mq_reading_timeout.tv_sec += 2;
-	int check;
-	mqd_t mail_queue;
-	PostmanMqMsgAdapter msg_adapter;
-	mail_queue = mq_open(MQ_POSTMAN_NAME, O_RDONLY);
-	if(mail_queue == -1) {
-		perror("[Postman] - Couldn\'t open the postman MQ\n");
-		strcpy(msg_adapter.buffer,"\0\0");
-	} else {
-		check = mq_timedreceive(mail_queue, msg_adapter.buffer, MQ_POSTMAN_MSG_SIZE, 0, &default_mq_reading_timeout);
-		if(check == -1 || check == ETIMEDOUT) {
-			perror("[Postman] - MQ is empty\n");
-			strcpy(msg_adapter.buffer,"\0\0");
-		}
-	}
-	check = mq_close(mail_queue);
-	return msg_adapter.data;
-}
-
-static int callback_example( struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len )
-{
-	switch( reason )
-	{
-		// Etablissement de la connexion
-		case LWS_CALLBACK_CLIENT_ESTABLISHED:
-			lws_callback_on_writable( wsi );
-			break;
-
-		// Réception des données
-		case LWS_CALLBACK_CLIENT_RECEIVE:
-			// Ici va le JSON parse pour les données recçues.
-			// Il doit exister une fonction lws_read un peu comme lws_write( wsi, p, n, LWS_WRITE_TEXT );
-			break;
-
-		// Envoi de données
-		case LWS_CALLBACK_CLIENT_WRITEABLE:
-		{
-			PostmanMqMsg msg;
-			printf("je me rends compte que j'ai un truc à envoyer\n");
-			msg = Postman_mq_receive();
-			size_t size_of_sending_string = sizeof((char*) msg.text_pointer);
-			printf("\n does it work ? %s \n", msg.text_pointer);
-			lws_write( wsi, size_of_sending_string, msg.text_pointer, LWS_WRITE_TEXT );
-			free(msg.text_pointer);
-			break;
-		}
-
-		case LWS_CALLBACK_CLOSED:
-			web_socket = NULL;
-			break;
-		case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-			web_socket = NULL;
-			break;
-
-		default:
-			perror("Some issue with lws ? don't know\n");
-			break;
-	}
-
-	return 0;
-}
-
-enum protocols
-{
-	PROTOCOL_EXAMPLE = 0,
-	PROTOCOL_COUNT
-};
-
-static struct lws_protocols protocols[] =
-{
-	{
-		"example-protocol",
-		callback_example,
-		0,
-		EXAMPLE_RX_BUFFER_BYTES,
-	},
-	{ NULL, NULL, 0, 0 } // terminator
-};
-
-static void* Postman_run() {
-	// Patouche à cette section
-	struct lws_context_creation_info info;
-	memset( &info, 0, sizeof(info) );
-
-	info.port = CONTEXT_PORT_NO_LISTEN;
-	info.protocols = protocols;
-	info.gid = -1;
-	info.uid = -1;
-
-	struct lws_context *context = lws_create_context( &info );
-	// Fin de la section patouche
-
-	// A changer en fonction de l'application
-	time_t old = 0;
-	while( 1 )
-	{
-		struct timeval tv;
-		gettimeofday( &tv, NULL );
-
-		// On se connecte si ce n'est pas déjà fait
-		if( !web_socket && tv.tv_sec != old )
-		{
-			// Changer l'adresse et le port d'écoute si nécessaire
-			struct lws_client_connect_info ccinfo = {0};
-			ccinfo.context = context;
-			ccinfo.address = "localhost";
-			ccinfo.port = 8000;
-			ccinfo.path = "/";
-			ccinfo.host = lws_canonical_hostname( context );
-			ccinfo.origin = "origin";
-			ccinfo.protocol = protocols[PROTOCOL_EXAMPLE].name;
-			web_socket = lws_client_connect_via_info(&ccinfo);
-		}
-		// Go à chaque fois que le timeout est passé
-		if( tv.tv_sec != old )
-		{
-			// Là on appelle la callback d'envoi au serveur
-			lws_callback_on_writable( web_socket );
-			old = tv.tv_sec;	// on rafraîchit le timer
-		}
-
-		lws_service( context, 5000 );	// changer le timeout (ms) si nécessaire
-	}
-
-	lws_context_destroy( context );
-
-	return 0;
-}
-
-void Postman_init() {
-	struct mq_attr mail_queue_attributes;
-	int check;
-	mqd_t mail_queue;
-	mail_queue_attributes.mq_maxmsg = MQ_POSTMAN_MSG_COUNT;
-	mail_queue_attributes.mq_msgsize = MQ_POSTMAN_MSG_SIZE;
-	mail_queue_attributes.mq_flags = 0;
-
-	check = mq_unlink(MQ_POSTMAN_NAME);
-	if(check != 0) {
-		perror("[Postman] - MQ already exist ?\n");
-	}
-
-	mail_queue = mq_open(MQ_POSTMAN_NAME, O_CREAT, 0777, &mail_queue_attributes);
-	if (mail_queue <= -1) {
-		perror("[Postman] - Couldn\' open the MQ during init\n");
-	}
-
-	check = mq_close(mail_queue);
-	if (check != 0) {
-		perror("[Postman] - Issue while closing the MQ during init\n");
-	}
-	check = pthread_create(&postman_thread, NULL, (void*)&Postman_run, NULL);
-	if (check != 0) {
-		perror("[Postman] - Issue while creating postman thread\n");
-	}
-}
-
-void Postman_send(char* text_to_send) {
-	PostmanMqMsg msg;
-	msg.text_pointer = text_to_send;
-	printf("dans le send : %s\n", msg.text_pointer);
-	Postman_mq_send(msg);
-}
-
-*/
