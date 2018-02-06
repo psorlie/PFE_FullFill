@@ -36,10 +36,10 @@ Pour avoir la date et l'heure du jour :
 #include <stdarg.h>
 #include <time.h>
 
-//#include "Application.h"
+#include "Application.h"
 #include "Postman.h"
 #include "cJSON.h"
-#include "Proxy.h"
+//#include "Proxy.h"
 /*******************************
  * Static function declaration *
  *******************************/
