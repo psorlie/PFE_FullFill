@@ -346,7 +346,7 @@ static void DispenserManager_read_backup() {
 	fpos_t pos;
 	int pos_init = 0;
 	bool is_not_over = true;
-	if((file_identifier = fopen("backup.txt", "rw+")) == NULL) {
+	if((file_identifier = fopen(BACKUP_FILE, "rw+")) == NULL) {
 		perror("Problème d'ouverture du fichier de backup");
 		DispenserManager_add_dispenser(0, DEFAULT_PRODUCT_NAME, 100, 100);		// TODO : pourquoi??
 	} else {

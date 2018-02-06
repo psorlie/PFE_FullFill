@@ -9,14 +9,17 @@
 #define SRC_DISPENSERMANAGER_H_
 
 #define MQ_DISPENSER_MANAGER_NAME           "/mq_dispenser_manager"
-#define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
-#define MQ_DISPENSER_MANAGER_MSG_COUNT (10)
+ #ifndef SIZE_MQ_MSG
+#define SIZE_MQ_MSG
+	#define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
+#endif  
+#define MQ_DISPENSER_MANAGER_MSG_COUNT      10
 
 //TODO
 /**
  * @def filepath to backup file - TBD
  */
-#define BACKUP_FILE "/jesaispas/backup.txt"
+#define BACKUP_FILE "backup.txt"
 
 //#include "Network_Configuration.h"
 #include "Dispenser.h"

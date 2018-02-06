@@ -18,13 +18,18 @@
 #include "Date.h"
 #include "Product.h"
 #include "MessageToSend.h"
-#include "DispenserManager.h" // is used because the Dispenser will call DM function to generate event
+//#include "DispenserManager.h" // is used because the Dispenser will call DM function to generate event
 							// for himself in case of pseudo-state transition
 
 #define MESSAGE_TO_SEND_SIZE (20)
 #define DATE_SIZE (10)
 #define MAX_COUNT_INVALID_MESSAGE (5)
 #define MAX_COUNT_LOST_MESSAGE (5)
+
+#ifndef SIZE_MQ_MSG
+#define SIZE_MQ_MSG
+	#define MQ_DISPENSER_MANAGER_MSG_SIZE (2048)
+#endif
 
 
 /********************************************* Déclaration des types **************************************/

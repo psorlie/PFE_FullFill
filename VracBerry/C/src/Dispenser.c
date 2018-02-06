@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "Dispenser.h"
+#include "DispenserManager.h"
 
 /**
  * @def the state machine for every dispenser, they all have their own state, and will run this SM

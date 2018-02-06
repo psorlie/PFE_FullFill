@@ -10,23 +10,122 @@
 //#include "Proxy.h"
 #include "DispenserManager.h"
 
+
 struct mosquitto *mosq = NULL;
+
+
+/************************************* definition of the static functions ******************************************/
+
+/**
+ * @brief function to parse a JSON message received by the web interface
+ * 
+ * @param JSON message received
+ *
+ */
+static void parse_object(cJSON *root);
+
+/**
+ * @brief function to call the functions accordingly to what the message contains
+ * 
+ * @param mosquitto message received from the web interface
+ *
+ */
+static void Postman_dispatch(const struct mosquitto_message *message);
+
+/**
+ * @brief Callback called when a MQTT message is received
+ * 
+ * @param mosquitto object
+ * @param id of the user
+ * @param message received
+ *
+ */
+static void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message);
+
+/**
+ * @brief Callback called when the client tries to connect to the MQTT broker
+ * 
+ * @param mosquitto object
+ * @param id of the user
+ * @param result of the connection --> 0 = success
+ *
+ */
+static void my_connect_callback(struct mosquitto *mosq, void *userdata, int result);
+
+/**
+ * @brief Callback called when the client subscribes to a topic
+ * 
+ * @param mosquitto object
+ * @param id of the user
+ * @param id of the topic
+ * @param qos count
+ * @param quos granted
+ *
+ */
+static void my_subscribe_callback(struct mosquitto *mosq, void *userdata, int mid, int qos_count, const int *granted_qos);
+
+/**
+ * @brief Callback called when a new log is detected
+ * 
+ * @param mosquitto object
+ * @param id of the user
+ * @param level
+ * @param message containing the informations of the log
+ *
+ */
+static void my_log_callback(struct mosquitto *mosq, void *userdata, int level, const char *str);
+
+
+/************************************* fuctions *******************************************/
+
 
 void Postman_send(char* message)
 {
     mosquitto_publish(mosq, NULL, TOPIC_SEND, strlen(message), message, QOS, RETAIN);
 }
 
-// Start listen thread
+
 void Postman_listen_start(){
     mosquitto_loop_start(mosq);
 }
 
-// Stop listen thread
+
 void Postman_listen_stop()
 {
     mosquitto_loop_stop(mosq, true);
 }
+
+
+void Postman_init()
+{
+    // Mosquitto init
+    //printf("début d'init");
+    mosquitto_lib_init();
+    //printf("init lib OK");
+    mosq = mosquitto_new(NULL, CLEAN_SESSION, NULL);
+    if(!mosq){
+        fprintf(stderr, "Error: Out of memory.\n");
+    }
+    //printf("nouveau mosquitto OK");
+    mosquitto_log_callback_set(mosq, my_log_callback);
+    mosquitto_connect_callback_set(mosq, my_connect_callback);
+    mosquitto_message_callback_set(mosq, my_message_callback);
+    mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
+    //printf("callbacks OK");
+
+    // Connection to the broker
+    if(mosquitto_connect(mosq, HOST, PORT, KEEP_ALIVE)){
+        fprintf(stderr, "Unable to connect.\n");
+    }
+    //printf("connect OK");
+}
+
+
+void Postman_destroy(){
+    mosquitto_destroy(mosq);
+    mosquitto_lib_cleanup();
+}
+
 
 static void parse_object(cJSON *root)
 {
@@ -133,13 +232,14 @@ static void parse_object(cJSON *root)
         perror("message non géré : type de JSON inconnu");
 }
 
+
 static void Postman_dispatch(const struct mosquitto_message *message){
     cJSON *msg = NULL;
     msg = cJSON_Parse(message->payload);
     parse_object(msg);
 }
 
-// Callback of message reception
+
 static void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
     //printf("réception de message : ");
@@ -183,41 +283,4 @@ static void my_log_callback(struct mosquitto *mosq, void *userdata, int level, c
 {
     // Print all log messages regardless of level.
     printf("%s\n", str);
-}
-
-// Initialisation of the MQTT client : config & connection
-void Postman_init()
-{
-	/*
-char *host = "localhost";
-int port = 1883;
-int keepalive = 60;
-bool clean_session = true;
-*/
-    // Mosquitto init
-    //printf("début d'init");
-    mosquitto_lib_init();
-    //printf("init lib OK");
-    mosq = mosquitto_new(NULL, CLEAN_SESSION, NULL);
-    if(!mosq){
-        fprintf(stderr, "Error: Out of memory.\n");
-    }
-    //printf("nouveau mosquitto OK");
-    mosquitto_log_callback_set(mosq, my_log_callback);
-    mosquitto_connect_callback_set(mosq, my_connect_callback);
-    mosquitto_message_callback_set(mosq, my_message_callback);
-    mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
-    //printf("callbacks OK");
-
-    // Connection to the broker
-    if(mosquitto_connect(mosq, HOST, PORT, KEEP_ALIVE)){
-        fprintf(stderr, "Unable to connect.\n");
-    }
-    //printf("connect OK");
-}
-
-// Destruction of the MQTT client
-void Postman_destroy(){
-    mosquitto_destroy(mosq);
-    mosquitto_lib_cleanup();
 }
